@@ -257,7 +257,9 @@ export default function ConnectionsGame({ onFinish }: ConnectionsGameProps) {
                   <img 
                     src={imgUrl} 
                     alt={productTitle} 
-                    className="w-full h-full object-cover rounded-lg brightness-90 contrast-110 saturate-75"
+                    className={`w-full h-full object-cover rounded-lg brightness-90 contrast-110 saturate-75 transition-transform duration-200 ${
+                      status === 'selected' ? 'scale-90' : 'scale-100'
+                    }`}
                   />
                   {/* Subtle gradient overlay for uniformity */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-transparent rounded-lg" />
