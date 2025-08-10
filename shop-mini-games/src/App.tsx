@@ -5,6 +5,7 @@ import QuestionDemo from "./components/QuestionDemo";
 import ConnectionsIntro from "./components/ConnectionsIntro";
 import ConnectionsGame from "./components/ConnectionsGame";
 import ConnectionsResults from "./components/ConnectionsResults";
+import GameItemsPage from "./components/GameItemsPage";
 import MiniHuntPage from "./miniHunt/MiniHuntPage";
 
 export function App() {
@@ -47,8 +48,12 @@ export function App() {
             results={results}
             onPlayAgain={() => setCurrentPage("connections-game")}
             onBackHome={() => setCurrentPage("home")}
+            onNavigate={setCurrentPage}
           />
         );
+
+      case "game-items":
+        return <GameItemsPage results={results} onNavigate={setCurrentPage} />;
 
       case "mini-hunt":
         return <MiniHuntPage />;

@@ -18,28 +18,22 @@ interface ConnectionsResultsProps {
   results: GameResults;
   onPlayAgain: () => void;
   onBackHome?: () => void;
-}
-
-interface CarouselItem {
-  label: string;
-  value?: string;
-  isImage?: boolean;
-  imageUrl?: string;
-  linkUrl?: string;
+  onNavigate?: (page: string) => void;
 }
 
 export default function ConnectionsResults({
   results,
   onPlayAgain,
   onBackHome,
+  onNavigate,
 }: ConnectionsResultsProps) {
   console.log(
     "🎮 ConnectionsResults: Component initialized with results:",
     results
   );
 
-  const { won, mistakes, elapsedSeconds, totalGuesses, solvedCategories } =
-    results;
+  const { mistakes, elapsedSeconds, totalGuesses, solvedCategories } = results;
+  const won = true;
   const [userStats, setUserStats] = useState<UserStats | null>(null);
   const [gameStats, setGameStats] = useState<GameStats | null>(null);
   const [leaderboard, setLeaderboard] = useState<LeaderboardResponse | null>(
@@ -119,29 +113,14 @@ export default function ConnectionsResults({
 
   const lifetime = loadStats();
 
-  // Carousel data
-  const carouselItems: CarouselItem[] = [
-    { label: "Time", value: `${elapsedSeconds}s` },
-    { label: "Mistakes", value: mistakes.toString() },
-    { label: "Guesses", value: totalGuesses.toString() },
-    { label: "Categories", value: solvedCategories.length.toString() },
-    {
-      label: "Results",
-      value: undefined,
-      isImage: true,
-      imageUrl: "https://i.postimg.cc/x8dX3wHV/image.png",
-      linkUrl: "https://postimages.org/",
-    },
-  ];
-
   // Navigation functions
   const goToNext = () => {
-    setCurrentIndex((prev) => (prev + 1) % carouselItems.length);
+    setCurrentIndex((prev) => (prev + 1) % 5); // 5 carousel items
   };
 
   const goToPrev = () => {
     setCurrentIndex(
-      (prev) => (prev - 1 + carouselItems.length) % carouselItems.length
+      (prev) => (prev - 1 + 5) % 5 // 5 carousel items
     );
   };
 
@@ -199,300 +178,412 @@ export default function ConnectionsResults({
   });
 
   return (
-    <div className="pt-12 px-4 pb-8 max-w-xl mx-auto text-center">
-      <h1 className="text-3xl font-bold mb-4">
-        {won ? "On fire! 🎉" : "Better luck next time"}
-      </h1>
+    <div
+      className="min-h-screen w-full"
+      style={{ background: "linear-gradient(to bottom, #FAFAFA, #EEEAFF)" }}
+    >
+      <div className="pt-12 px-4 pb-8 max-w-xl mx-auto text-center">
+        <h1 className="text-3xl font-bold mb-4">
+          {won ? "On fire! 🎉" : "Better luck next time"}
+        </h1>
 
-      {/* Error message */}
-      {submitError && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4 text-red-800 text-sm">
-          {submitError}
+        {/* Error message */}
+        {submitError && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4 text-red-800 text-sm">
+            {submitError}
+            <button
+              onClick={() => {
+                console.log(
+                  "🔄 ConnectionsResults: Retry button clicked, clearing error and retrying"
+                );
+                setSubmitError(null);
+                // Trigger retry by calling the submission function again
+                const retrySubmission = async () => {
+                  setIsSubmitting(true);
+                  try {
+                    const progressData = createProgressData(
+                      userId,
+                      elapsedSeconds,
+                      solvedCategories.length,
+                      won,
+                      mistakes
+                    );
+
+                    console.log(
+                      "🔄 ConnectionsResults: Retrying with data:",
+                      progressData
+                    );
+
+                    // Submit to backend and fetch all related data
+                    const { userStats, gameStats, leaderboard } =
+                      await submitGameResults(progressData);
+
+                    console.log("✅ ConnectionsResults: Retry successful!");
+
+                    // Update component state
+                    setUserStats(userStats);
+                    setGameStats(gameStats);
+                    setLeaderboard(leaderboard);
+                  } catch (error) {
+                    console.error(
+                      "❌ ConnectionsResults: Retry failed:",
+                      error
+                    );
+                    setSubmitError(
+                      "Retry failed. Please check your connection."
+                    );
+                  } finally {
+                    setIsSubmitting(false);
+                  }
+                };
+                retrySubmission();
+              }}
+              className="ml-2 px-2 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700"
+            >
+              Retry
+            </button>
+          </div>
+        )}
+
+        {/* Loading indicator */}
+        {isSubmitting && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4 text-blue-800 text-sm">
+            Syncing with server...
+          </div>
+        )}
+
+        <div className="rounded-lg p-6 mb-6 text-center max-w-full mx-auto relative">
+          {won ? (
+            <>
+              <div
+                className="overflow-hidden touch-pan-y select-none w-full"
+                onTouchStart={onTouchStart}
+                onTouchMove={onTouchMove}
+                onTouchEnd={onTouchEnd}
+              >
+                <div className="w-[280px] mx-auto relative overflow-hidden">
+                  <div
+                    ref={carouselRef}
+                    className="flex transition-transform duration-300 ease-in-out"
+                    style={{
+                      transform: `translateX(-${currentIndex * 280}px)`,
+                    }}
+                  >
+
+                    {/* Results Image Component */}
+                    <div className="bg-white rounded-lg p-6 border aspect-square flex flex-col justify-center w-[240px] h-[240px] mx-5 flex-shrink-0 shadow-sm">
+                      <p className="text-sm text-gray-600 mb-2">Results</p>
+                      <div className="flex-1 flex items-center justify-center">
+                        <a
+                          href="https://postimages.org/"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="block"
+                        >
+                          <img
+                            src="https://i.postimg.cc/x8dX3wHV/image.png"
+                            alt="Results"
+                            className="max-w-full max-h-full object-contain rounded"
+                          />
+                        </a>
+                      </div>
+                    </div>
+
+                    {/* Time Component */}
+                    <div className="bg-white rounded-lg p-6 border aspect-square flex flex-col justify-center w-[240px] h-[240px] mx-5 flex-shrink-0 shadow-sm">
+                      <p className="text-sm text-gray-600 mb-2">Time</p>
+                      <p className="text-3xl font-bold text-gray-900">
+                        {elapsedSeconds}s
+                      </p>
+                      {gameStats && gameStats.average_completion_time > 0 && (() => {
+                        const averageTime = gameStats.average_completion_time;
+                        const userTime = elapsedSeconds;
+                        const percentageFaster = Math.round(((averageTime - userTime) / averageTime) * 100);
+                        
+                        // Round to nearest milestone: 25%, 50%, 75%, or 90%
+                        let displayPercentage;
+                        if (percentageFaster >= 85) displayPercentage = 90;
+                        else if (percentageFaster >= 62.5) displayPercentage = 75;
+                        else if (percentageFaster >= 37.5) displayPercentage = 50;
+                        else if (percentageFaster >= 12.5) displayPercentage = 25;
+                        else displayPercentage = null;
+
+                        return displayPercentage && userTime < averageTime ? (
+                          <p className="text-xs text-green-600 mt-1 font-medium">
+                            {displayPercentage}% faster! 🏃‍♂️
+                          </p>
+                        ) : null;
+                      })()}
+                    </div>
+
+                    {/* Mistakes Component */}
+                    <div className="bg-white rounded-lg p-6 border aspect-square flex flex-col justify-center w-[240px] h-[240px] mx-5 flex-shrink-0 shadow-sm">
+                      <p className="text-sm text-gray-600 mb-2">Mistakes</p>
+                      <p className="text-3xl font-bold text-gray-900">
+                        {mistakes}
+                      </p>
+                    </div>
+
+                    {/* Guesses Component */}
+                    <div className="bg-white rounded-lg p-6 border aspect-square flex flex-col justify-center w-[240px] h-[240px] mx-5 flex-shrink-0 shadow-sm">
+                      <p className="text-sm text-gray-600 mb-2">Guesses</p>
+                      <p className="text-3xl font-bold text-gray-900">
+                        {totalGuesses}
+                      </p>
+                    </div>
+
+                    {/* Categories Component */}
+                    <div className="bg-white rounded-lg p-6 border aspect-square flex flex-col justify-center w-[240px] h-[240px] mx-5 flex-shrink-0 shadow-sm">
+                      <p className="text-sm text-gray-600 mb-2">Categories</p>
+                      <p className="text-3xl font-bold text-gray-900">
+                        {solvedCategories.length}
+                      </p>
+                    </div>
+
+                    {/* Repeat the components for infinite scroll effect */}
+                    <div className="bg-white rounded-lg p-6 border aspect-square flex flex-col justify-center w-[240px] h-[240px] mx-5 flex-shrink-0 shadow-sm">
+                      <p className="text-sm text-gray-600 mb-2">Time</p>
+                      <p className="text-3xl font-bold text-gray-900">
+                        {elapsedSeconds}s
+                      </p>
+                      {gameStats && gameStats.average_completion_time > 0 && (() => {
+                        const averageTime = gameStats.average_completion_time;
+                        const userTime = elapsedSeconds;
+                        const percentageFaster = Math.round(((averageTime - userTime) / averageTime) * 100);
+                        
+                        // Round to nearest milestone: 25%, 50%, 75%, or 90%
+                        let displayPercentage;
+                        if (percentageFaster >= 85) displayPercentage = 90;
+                        else if (percentageFaster >= 62.5) displayPercentage = 75;
+                        else if (percentageFaster >= 37.5) displayPercentage = 50;
+                        else if (percentageFaster >= 12.5) displayPercentage = 25;
+                        else displayPercentage = null;
+
+                        return displayPercentage && userTime < averageTime ? (
+                          <p className="text-xs text-green-600 mt-1 font-medium">
+                            {displayPercentage}% faster! 🏃‍♂️
+                          </p>
+                        ) : null;
+                      })()}
+                    </div>
+
+                    <div className="bg-white rounded-lg p-6 border aspect-square flex flex-col justify-center w-[240px] h-[240px] mx-5 flex-shrink-0 shadow-sm">
+                      <p className="text-sm text-gray-600 mb-2">Mistakes</p>
+                      <p className="text-3xl font-bold text-gray-900">
+                        {mistakes}
+                      </p>
+                    </div>
+
+                    <div className="bg-white rounded-lg p-6 border aspect-square flex flex-col justify-center w-[240px] h-[240px] mx-5 flex-shrink-0 shadow-sm">
+                      <p className="text-sm text-gray-600 mb-2">Guesses</p>
+                      <p className="text-3xl font-bold text-gray-900">
+                        {totalGuesses}
+                      </p>
+                    </div>
+
+                    <div className="bg-white rounded-lg p-6 border aspect-square flex flex-col justify-center w-[240px] h-[240px] mx-5 flex-shrink-0 shadow-sm">
+                      <p className="text-sm text-gray-600 mb-2">Categories</p>
+                      <p className="text-3xl font-bold text-gray-900">
+                        {solvedCategories.length}
+                      </p>
+                    </div>
+
+                    <div className="bg-white rounded-lg p-6 border aspect-square flex flex-col justify-center w-[240px] h-[240px] mx-5 flex-shrink-0 shadow-sm">
+                      <p className="text-sm text-gray-600 mb-2">Results</p>
+                      <div className="flex-1 flex items-center justify-center">
+                        <a
+                          href="https://postimages.org/"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="block"
+                        >
+                          <img
+                            src="https://i.postimg.cc/x8dX3wHV/image.png"
+                            alt="Results"
+                            className="max-w-full max-h-full object-contain rounded"
+                          />
+                        </a>
+                      </div>
+                    </div>
+
+                    {/* Third repetition for infinite scroll */}
+                    <div className="bg-white rounded-lg p-6 border aspect-square flex flex-col justify-center w-[240px] h-[240px] mx-5 flex-shrink-0 shadow-sm">
+                      <p className="text-sm text-gray-600 mb-2">Time</p>
+                      <p className="text-3xl font-bold text-gray-900">
+                        {elapsedSeconds}s
+                      </p>
+                      {gameStats && gameStats.average_completion_time > 0 && (() => {
+                        const averageTime = gameStats.average_completion_time;
+                        const userTime = elapsedSeconds;
+                        const percentageFaster = Math.round(((averageTime - userTime) / averageTime) * 100);
+                        
+                        // Round to nearest milestone: 25%, 50%, 75%, or 90%
+                        let displayPercentage;
+                        if (percentageFaster >= 85) displayPercentage = 90;
+                        else if (percentageFaster >= 62.5) displayPercentage = 75;
+                        else if (percentageFaster >= 37.5) displayPercentage = 50;
+                        else if (percentageFaster >= 12.5) displayPercentage = 25;
+                        else displayPercentage = null;
+
+                        return displayPercentage && userTime < averageTime ? (
+                          <p className="text-xs text-green-600 mt-1 font-medium">
+                            {displayPercentage}% faster! 🏃‍♂️
+                          </p>
+                        ) : null;
+                      })()}
+                    </div>
+
+                    <div className="bg-white rounded-lg p-6 border aspect-square flex flex-col justify-center w-[240px] h-[240px] mx-5 flex-shrink-0 shadow-sm">
+                      <p className="text-sm text-gray-600 mb-2">Mistakes</p>
+                      <p className="text-3xl font-bold text-gray-900">
+                        {mistakes}
+                      </p>
+                    </div>
+
+                    <div className="bg-white rounded-lg p-6 border aspect-square flex flex-col justify-center w-[240px] h-[240px] mx-5 flex-shrink-0 shadow-sm">
+                      <p className="text-sm text-gray-600 mb-2">Guesses</p>
+                      <p className="text-3xl font-bold text-gray-900">
+                        {totalGuesses}
+                      </p>
+                    </div>
+
+                    <div className="bg-white rounded-lg p-6 border aspect-square flex flex-col justify-center w-[240px] h-[240px] mx-5 flex-shrink-0 shadow-sm">
+                      <p className="text-sm text-gray-600 mb-2">Categories</p>
+                      <p className="text-3xl font-bold text-gray-900">
+                        {solvedCategories.length}
+                      </p>
+                    </div>
+
+                    <div className="bg-white rounded-lg p-6 border aspect-square flex flex-col justify-center w-[240px] h-[240px] mx-5 flex-shrink-0 shadow-sm">
+                      <p className="text-sm text-gray-600 mb-2">Results</p>
+                      <div className="flex-1 flex items-center justify-center">
+                        <a
+                          href="https://postimages.org/"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="block"
+                        >
+                          <img
+                            src="https://i.postimg.cc/x8dX3wHV/image.png"
+                            alt="Results"
+                            className="max-w-full max-h-full object-contain rounded"
+                          />
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              {/* Dots Indicator - Only show when won */}
+              <div className="flex justify-center mt-4 gap-2">
+                <button
+                  onClick={() => setCurrentIndex(0)}
+                  className={`w-2 h-2 rounded-full transition-colors ${
+                    0 === currentIndex ? "bg-blue-600" : "bg-gray-300"
+                  }`}
+                  aria-label="Go to Time stat"
+                />
+                <button
+                  onClick={() => setCurrentIndex(1)}
+                  className={`w-2 h-2 rounded-full transition-colors ${
+                    1 === currentIndex ? "bg-blue-600" : "bg-gray-300"
+                  }`}
+                  aria-label="Go to Mistakes stat"
+                />
+                <button
+                  onClick={() => setCurrentIndex(2)}
+                  className={`w-2 h-2 rounded-full transition-colors ${
+                    2 === currentIndex ? "bg-blue-600" : "bg-gray-300"
+                  }`}
+                  aria-label="Go to Guesses stat"
+                />
+                <button
+                  onClick={() => setCurrentIndex(3)}
+                  className={`w-2 h-2 rounded-full transition-colors ${
+                    3 === currentIndex ? "bg-blue-600" : "bg-gray-300"
+                  }`}
+                  aria-label="Go to Categories stat"
+                />
+                <button
+                  onClick={() => setCurrentIndex(4)}
+                  className={`w-2 h-2 rounded-full transition-colors ${
+                    4 === currentIndex ? "bg-blue-600" : "bg-gray-300"
+                  }`}
+                  aria-label="Go to Results stat"
+                />
+              </div>
+            </>
+          ) : (
+            <div className="flex flex-col items-center">
+              <a
+                href="https://postimages.org/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex justify-center"
+              >
+                <img
+                  src="https://i.postimg.cc/x8dX3wHV/image.png"
+                  alt="image"
+                  className="max-w-1/2 max-h-1/2 object-contain rounded mb-4 mx-auto"
+                />
+              </a>
+            </div>
+          )}
+        </div>
+
+        {/* Share */}
+        {won && (
           <button
             onClick={() => {
               console.log(
-                "🔄 ConnectionsResults: Retry button clicked, clearing error and retrying"
+                "📋 ConnectionsResults: Share button clicked, copying to clipboard:",
+                shareText
               );
-              setSubmitError(null);
-              // Trigger retry by calling the submission function again
-              const retrySubmission = async () => {
-                setIsSubmitting(true);
-                try {
-                  const progressData = createProgressData(
-                    userId,
-                    elapsedSeconds,
-                    solvedCategories.length,
-                    won,
-                    mistakes
-                  );
-
-                  console.log(
-                    "🔄 ConnectionsResults: Retrying with data:",
-                    progressData
-                  );
-
-                  // Submit to backend and fetch all related data
-                  const { userStats, gameStats, leaderboard } =
-                    await submitGameResults(progressData);
-
-                  console.log("✅ ConnectionsResults: Retry successful!");
-
-                  // Update component state
-                  setUserStats(userStats);
-                  setGameStats(gameStats);
-                  setLeaderboard(leaderboard);
-                } catch (error) {
-                  console.error("❌ ConnectionsResults: Retry failed:", error);
-                  setSubmitError("Retry failed. Please check your connection.");
-                } finally {
-                  setIsSubmitting(false);
-                }
-              };
-              retrySubmission();
+              navigator.clipboard.writeText(shareText);
             }}
-            className="ml-2 px-2 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700"
+            className="w-full mb-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
           >
-            Retry
+            Copy Results & Share
           </button>
-        </div>
-      )}
-
-      {/* Loading indicator */}
-      {isSubmitting && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4 text-blue-800 text-sm">
-          Syncing with server...
-        </div>
-      )}
-
-      <div className="rounded-lg p-6 mb-6 text-center max-w-full mx-auto relative">
-        {won ? (
-          <>
-            {/* Swipe Instructions */}
-            <div className="text-xs text-gray-500 mb-2">Swipe to navigate</div>
-            <div
-              className="overflow-hidden touch-pan-y select-none w-full"
-              onTouchStart={onTouchStart}
-              onTouchMove={onTouchMove}
-              onTouchEnd={onTouchEnd}
-            >
-              <div className="w-[280px] mx-auto relative overflow-hidden">
-                <div
-                  ref={carouselRef}
-                  className="flex transition-transform duration-300 ease-in-out"
-                  style={{
-                    transform: `translateX(-${currentIndex * 280}px)`,
-                  }}
-                >
-                  {/* Render items multiple times for infinite effect */}
-                  {[...carouselItems, ...carouselItems, ...carouselItems].map(
-                    (item, index) => (
-                      <div
-                        key={`${item.label}-${index}`}
-                        className="bg-white rounded-lg p-6 border aspect-square flex flex-col justify-center w-[240px] h-[240px] mx-5 flex-shrink-0 shadow-sm"
-                      >
-                        {item.isImage ? (
-                          <>
-                            <p className="text-sm text-gray-600 mb-2">
-                              {item.label}
-                            </p>
-                            <div className="flex-1 flex items-center justify-center">
-                              <a
-                                href={item.linkUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="block"
-                              >
-                                <img
-                                  src={item.imageUrl}
-                                  alt={item.label || "image"}
-                                  className="max-w-full max-h-full object-contain rounded"
-                                />
-                              </a>
-                            </div>
-                          </>
-                        ) : (
-                          <>
-                            <p className="text-sm text-gray-600 mb-2">
-                              {item.label}
-                            </p>
-                            <p className="text-3xl font-bold text-gray-900">
-                              {item.value}
-                            </p>
-                          </>
-                        )}
-                      </div>
-                    )
-                  )}
-                </div>
-              </div>
-            </div>
-            {/* Dots Indicator - Only show when won */}
-            <div className="flex justify-center mt-4 gap-2">
-              {carouselItems.map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => setCurrentIndex(index)}
-                  className={`w-2 h-2 rounded-full transition-colors ${
-                    index === currentIndex ? "bg-blue-600" : "bg-gray-300"
-                  }`}
-                  aria-label={`Go to stat ${index + 1}`}
-                />
-              ))}
-            </div>
-          </>
-        ) : (
-          <div className="flex flex-col items-center">
-            <a href="https://postimages.org/" target="_blank">
-              <img
-                src="https://i.postimg.cc/x8dX3wHV/image.png"
-                border="0"
-                alt="image"
-              />
-            </a>
-          </div>
         )}
-      </div>
 
-      {/* Share */}
-      <button
-        onClick={() => {
-          console.log(
-            "📋 ConnectionsResults: Share button clicked, copying to clipboard:",
-            shareText
-          );
-          navigator.clipboard.writeText(shareText);
-        }}
-        className="w-full mb-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-      >
-        Copy Results & Share
-      </button>
-
-      {/* Play again */}
-      <button
-        onClick={() => {
-          console.log("🔄 ConnectionsResults: Play Again button clicked");
-          onPlayAgain();
-        }}
-        className="w-full mb-2 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-      >
-        Play Again
-      </button>
-
-      {onBackHome && (
+        {/* Play again */}
         <button
-          className="text-sm text-blue-600 underline"
           onClick={() => {
-            console.log("🏠 ConnectionsResults: Back Home button clicked");
-            onBackHome();
+            console.log("🔄 ConnectionsResults: Play Again button clicked");
+            onPlayAgain();
           }}
+          className="w-full mb-2 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
         >
-          Back Home
+          Play Again
         </button>
-      )}
 
-      {/* Server Stats Section */}
-      {userStats && (
-        <div className="mt-8 bg-blue-50 rounded-lg p-4 text-left">
-          <h2 className="font-semibold mb-2 text-blue-900">
-            Your Server Stats
-          </h2>
-          <p className="mb-1">
-            <strong>Games Played:</strong> {userStats.total_games_played}
-          </p>
-          <p className="mb-1">
-            <strong>Best Time:</strong>{" "}
-            {userStats.best_time ? `${userStats.best_time}s` : "N/A"}
-          </p>
-          <p className="mb-1">
-            <strong>Average Time:</strong>{" "}
-            {userStats.average_time
-              ? `${Math.round(userStats.average_time)}s`
-              : "N/A"}
-          </p>
-          <p className="mb-1">
-            <strong>Current Streak:</strong> {userStats.current_streak}
-          </p>
-          <p className="mb-1">
-            <strong>Longest Streak:</strong> {userStats.longest_streak}
-          </p>
-          <p className="mb-1">
-            <strong>Total Score:</strong> {userStats.total_score}
-          </p>
-        </div>
-      )}
+        {/* View Game Items */}
+        <button
+          onClick={() => {
+            console.log(
+              "📋 ConnectionsResults: View Game Items button clicked"
+            );
+            if (onNavigate) {
+              onNavigate("game-items");
+            }
+          }}
+          className="w-full mb-2 py-2 bg-purple-600 text-white rounded hover:bg-purple-700"
+        >
+          View Game Items
+        </button>
 
-      {/* Game Statistics */}
-      {gameStats && (
-        <div className="mt-4 bg-green-50 rounded-lg p-4 text-left">
-          <h2 className="font-semibold mb-2 text-green-900">
-            Global Game Stats
-          </h2>
-          <p className="mb-1">
-            <strong>Total Players:</strong> {gameStats.total_players}
-          </p>
-          <p className="mb-1">
-            <strong>Games Played:</strong> {gameStats.total_games_played}
-          </p>
-          <p className="mb-1">
-            <strong>Average Completion Time:</strong>{" "}
-            {gameStats.average_completion_time}s
-          </p>
-          <p className="mb-1">
-            <strong>Completion Rate:</strong> {gameStats.completion_rate}%
-          </p>
-        </div>
-      )}
-
-      {/* Leaderboard */}
-      {leaderboard && leaderboard.entries.length > 0 && (
-        <div className="mt-4 bg-yellow-50 rounded-lg p-4 text-left">
-          <h2 className="font-semibold mb-2 text-yellow-900">Top Players</h2>
-          <div className="space-y-1">
-            {leaderboard.entries.slice(0, 5).map((entry, index) => (
-              <div
-                key={entry.user_id}
-                className="flex justify-between items-center text-sm"
-              >
-                <span
-                  className={`${
-                    entry.user_id === userId ? "font-bold text-yellow-800" : ""
-                  }`}
-                >
-                  #{index + 1}{" "}
-                  {entry.user_id === userId ? "(You)" : entry.user_id.slice(-8)}
-                </span>
-                <span className="font-mono">{entry.best_time}s</span>
-              </div>
-            ))}
-          </div>
-          <p className="text-xs text-gray-600 mt-2">
-            Total players: {leaderboard.total_users}
-          </p>
-        </div>
-      )}
-
-      {/* Local Lifetime Stats (fallback) */}
-      <div className="mt-8 bg-gray-50 rounded-lg p-4 text-left">
-        <h2 className="font-semibold mb-2">Local Stats</h2>
-        <p className="mb-1">
-          <strong>Games Played:</strong> {lifetime.gamesPlayed}
-        </p>
-        <p className="mb-1">
-          <strong>Games Won:</strong> {lifetime.gamesWon}
-        </p>
-        <p className="mb-1">
-          <strong>Average Time:</strong>{" "}
-          {lifetime.gamesPlayed
-            ? Math.round(lifetime.totalTime / lifetime.gamesPlayed)
-            : 0}
-          s
-        </p>
-        <p className="mb-1">
-          <strong>Total Mistakes:</strong> {lifetime.totalMistakes}
-        </p>
-        <p className="mb-1">
-          <strong>Total Guesses:</strong> {lifetime.totalGuesses}
-        </p>
+        {onBackHome && (
+          <button
+            className="text-sm text-blue-600 underline"
+            onClick={() => {
+              console.log("🏠 ConnectionsResults: Back Home button clicked");
+              onBackHome();
+            }}
+          >
+            Back Home
+          </button>
+        )}
       </div>
     </div>
   );
