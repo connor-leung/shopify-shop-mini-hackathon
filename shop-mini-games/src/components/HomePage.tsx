@@ -32,6 +32,13 @@ export function HomePage({ onNavigate }: HomePageProps) {
         >
           Question Demo
         </button>
+
+        <button
+          onClick={() => onNavigate('connections-intro')}
+          className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+        >
+          Play Connections
+        </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
