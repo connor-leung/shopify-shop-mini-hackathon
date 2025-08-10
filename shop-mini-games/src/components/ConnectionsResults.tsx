@@ -21,6 +21,72 @@ interface ConnectionsResultsProps {
   onNavigate?: (page: string) => void;
 }
 
+// Confetti component
+const Confetti = ({ show }: { show: boolean }) => {
+  if (!show) return null;
+
+  return (
+    <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden">
+      {Array.from({ length: 50 }, (_, i) => (
+        <div
+          key={i}
+          className="absolute w-2 h-2 opacity-80 animate-confetti"
+          style={{
+            left: `${Math.random() * 100}%`,
+            top: `-100px`, // Start above the viewport
+            backgroundColor: [
+              "#ff6b6b",
+              "#4ecdc4",
+              "#45b7d1",
+              "#96ceb4",
+              "#ffeaa7",
+              "#dda0dd",
+            ][Math.floor(Math.random() * 6)],
+            animationDelay: `${Math.random() * 2}s`,
+            animationDuration: `${2 + Math.random() * 3}s`,
+          }}
+        />
+      ))}
+    </div>
+  );
+};
+
+// Rain component for when user loses
+const Rain = ({ show }: { show: boolean }) => {
+  if (!show) return null;
+
+  return (
+    <>
+      {/* Dark overlay */}
+      <div className="fixed inset-0 bg-gray-900 dark-overlay pointer-events-none z-40" />
+
+      {/* Rain drops */}
+      <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden">
+        {Array.from({ length: 100 }, (_, i) => (
+          <div
+            key={i}
+            className="absolute w-0.5 opacity-60 animate-rain bg-blue-300"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `-100px`,
+              height: `${10 + Math.random() * 20}px`,
+              animationDelay: `${Math.random() * 2}s`,
+              animationDuration: `${1 + Math.random() * 2}s`,
+            }}
+          />
+        ))}
+      </div>
+    </>
+  );
+};
+
+interface ConnectionsResultsProps {
+  results: GameResults;
+  onPlayAgain: () => void;
+  onBackHome?: () => void;
+  onNavigate?: (page: string) => void;
+}
+
 export default function ConnectionsResults({
   results,
   onPlayAgain,
@@ -33,7 +99,7 @@ export default function ConnectionsResults({
   );
 
   const { mistakes, elapsedSeconds, totalGuesses, solvedCategories } = results;
-  const won = true;
+  const won = results.won; // Use the actual won result from the game
   const [userStats, setUserStats] = useState<UserStats | null>(null);
   const [gameStats, setGameStats] = useState<GameStats | null>(null);
   const [leaderboard, setLeaderboard] = useState<LeaderboardResponse | null>(
@@ -41,6 +107,47 @@ export default function ConnectionsResults({
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+
+  // Confetti and rain state
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [showRain, setShowRain] = useState(false);
+
+  // Helper function to calculate speed percentage
+  const getSpeedPercentage = () => {
+    if (
+      !gameStats ||
+      !gameStats.average_completion_time ||
+      gameStats.average_completion_time <= 0
+    ) {
+      return null;
+    }
+
+    const averageTime = gameStats.average_completion_time;
+    const userTime = elapsedSeconds;
+
+    console.log("🏃‍♂️ Speed calculation:", {
+      averageTime,
+      userTime,
+      gameStats: gameStats,
+    });
+
+    if (userTime >= averageTime) {
+      return null; // User is not faster
+    }
+
+    const percentageFaster = Math.round(
+      ((averageTime - userTime) / averageTime) * 100
+    );
+
+    console.log("📊 Raw percentage faster:", percentageFaster);
+
+    // Round to nearest milestone: 25%, 50%, 75%, or 90%
+    if (percentageFaster >= 85) return 90;
+    if (percentageFaster >= 62.5) return 75;
+    if (percentageFaster >= 37.5) return 50;
+    if (percentageFaster >= 12.5) return 25;
+    return null;
+  };
 
   // Carousel state
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -52,6 +159,25 @@ export default function ConnectionsResults({
 
   const userId = getUserId();
   console.log("👤 ConnectionsResults: User ID generated:", userId);
+
+  // Trigger confetti (win) or rain (lose) when component mounts
+  useEffect(() => {
+    if (won) {
+      setShowConfetti(true);
+      // Hide confetti after 4 seconds
+      const timer = setTimeout(() => {
+        setShowConfetti(false);
+      }, 4000);
+      return () => clearTimeout(timer);
+    } else {
+      setShowRain(true);
+      // Keep rain going longer for atmosphere
+      const timer = setTimeout(() => {
+        setShowRain(false);
+      }, 8000);
+      return () => clearTimeout(timer);
+    }
+  }, [won]);
 
   // Persist lifetime stats and submit to backend
   useEffect(() => {
@@ -182,9 +308,11 @@ export default function ConnectionsResults({
       className="min-h-screen w-full"
       style={{ background: "linear-gradient(to bottom, #FAFAFA, #EEEAFF)" }}
     >
+      <Confetti show={showConfetti} />
+      <Rain show={showRain} />
       <div className="pt-12 px-4 pb-8 max-w-xl mx-auto text-center">
         <h1 className="text-3xl font-bold mb-4">
-          {won ? "On fire! 🎉" : "Better luck next time"}
+          {won ? "On fire! 🎉" : "Better luck next time ☔"}
         </h1>
 
         {/* Error message */}
@@ -269,7 +397,6 @@ export default function ConnectionsResults({
                       transform: `translateX(-${currentIndex * 280}px)`,
                     }}
                   >
-
                     {/* Results Image Component */}
                     <div className="bg-white rounded-lg p-6 border aspect-square flex flex-col justify-center w-[240px] h-[240px] mx-5 flex-shrink-0 shadow-sm">
                       <p className="text-sm text-gray-600 mb-2">Results</p>
@@ -295,22 +422,12 @@ export default function ConnectionsResults({
                       <p className="text-3xl font-bold text-gray-900">
                         {elapsedSeconds}s
                       </p>
-                      {gameStats && gameStats.average_completion_time > 0 && (() => {
-                        const averageTime = gameStats.average_completion_time;
-                        const userTime = elapsedSeconds;
-                        const percentageFaster = Math.round(((averageTime - userTime) / averageTime) * 100);
-                        
-                        // Round to nearest milestone: 25%, 50%, 75%, or 90%
-                        let displayPercentage;
-                        if (percentageFaster >= 85) displayPercentage = 90;
-                        else if (percentageFaster >= 62.5) displayPercentage = 75;
-                        else if (percentageFaster >= 37.5) displayPercentage = 50;
-                        else if (percentageFaster >= 12.5) displayPercentage = 25;
-                        else displayPercentage = null;
-
-                        return displayPercentage && userTime < averageTime ? (
+                      {(() => {
+                        const speedPercentage = getSpeedPercentage();
+                        console.log("🎯 Display percentage:", speedPercentage);
+                        return speedPercentage ? (
                           <p className="text-xs text-green-600 mt-1 font-medium">
-                            {displayPercentage}% faster! 🏃‍♂️
+                            {speedPercentage}% faster! 🏃‍♂️
                           </p>
                         ) : null;
                       })()}
@@ -346,22 +463,11 @@ export default function ConnectionsResults({
                       <p className="text-3xl font-bold text-gray-900">
                         {elapsedSeconds}s
                       </p>
-                      {gameStats && gameStats.average_completion_time > 0 && (() => {
-                        const averageTime = gameStats.average_completion_time;
-                        const userTime = elapsedSeconds;
-                        const percentageFaster = Math.round(((averageTime - userTime) / averageTime) * 100);
-                        
-                        // Round to nearest milestone: 25%, 50%, 75%, or 90%
-                        let displayPercentage;
-                        if (percentageFaster >= 85) displayPercentage = 90;
-                        else if (percentageFaster >= 62.5) displayPercentage = 75;
-                        else if (percentageFaster >= 37.5) displayPercentage = 50;
-                        else if (percentageFaster >= 12.5) displayPercentage = 25;
-                        else displayPercentage = null;
-
-                        return displayPercentage && userTime < averageTime ? (
+                      {(() => {
+                        const speedPercentage = getSpeedPercentage();
+                        return speedPercentage ? (
                           <p className="text-xs text-green-600 mt-1 font-medium">
-                            {displayPercentage}% faster! 🏃‍♂️
+                            {speedPercentage}% faster! 🏃‍♂️
                           </p>
                         ) : null;
                       })()}
@@ -412,22 +518,11 @@ export default function ConnectionsResults({
                       <p className="text-3xl font-bold text-gray-900">
                         {elapsedSeconds}s
                       </p>
-                      {gameStats && gameStats.average_completion_time > 0 && (() => {
-                        const averageTime = gameStats.average_completion_time;
-                        const userTime = elapsedSeconds;
-                        const percentageFaster = Math.round(((averageTime - userTime) / averageTime) * 100);
-                        
-                        // Round to nearest milestone: 25%, 50%, 75%, or 90%
-                        let displayPercentage;
-                        if (percentageFaster >= 85) displayPercentage = 90;
-                        else if (percentageFaster >= 62.5) displayPercentage = 75;
-                        else if (percentageFaster >= 37.5) displayPercentage = 50;
-                        else if (percentageFaster >= 12.5) displayPercentage = 25;
-                        else displayPercentage = null;
-
-                        return displayPercentage && userTime < averageTime ? (
+                      {(() => {
+                        const speedPercentage = getSpeedPercentage();
+                        return speedPercentage ? (
                           <p className="text-xs text-green-600 mt-1 font-medium">
-                            {displayPercentage}% faster! 🏃‍♂️
+                            {speedPercentage}% faster! 🏃‍♂️
                           </p>
                         ) : null;
                       })()}
@@ -572,6 +667,36 @@ export default function ConnectionsResults({
         >
           View Game Items
         </button>
+
+        {/* Test Confetti Button */}
+        {/* <button
+          onClick={() => {
+            console.log("🎉 ConnectionsResults: Test Confetti button clicked");
+            setShowConfetti(true);
+            // Hide confetti after 4 seconds
+            setTimeout(() => {
+              setShowConfetti(false);
+            }, 4000);
+          }}
+          className="w-full mb-2 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600"
+        >
+          🎉 Test Confetti
+        </button> */}
+
+        {/* Test Rain Button */}
+        {/* <button
+          onClick={() => {
+            console.log("☔ ConnectionsResults: Test Rain button clicked");
+            setShowRain(true);
+            // Hide rain after 8 seconds
+            setTimeout(() => {
+              setShowRain(false);
+            }, 5000);
+          }}
+          className="w-full mb-2 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
+        >
+          ☔ Test Rain
+        </button> */}
 
         {onBackHome && (
           <button
