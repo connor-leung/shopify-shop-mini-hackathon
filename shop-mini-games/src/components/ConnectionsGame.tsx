@@ -3,7 +3,6 @@ import { useGenerateGameData } from '../utils/useGenerateGameData'
 
 interface ConnectionsGameProps {
   onFinish: (results: GameResults) => void
-  onQuit?: () => void
 }
 
 export interface GameResults {
@@ -17,15 +16,7 @@ export interface GameResults {
   totalGuesses: number
 }
 
-// Shopify-inspired color scheme with NYT Connections feel
-const DIFFICULTY_COLORS: Record<string, string> = {
-  Easy: 'bg-green-600',      // Shopify green
-  Medium: 'bg-blue-500',     // Shopify blue  
-  Hard: 'bg-purple-600',     // Shopify purple
-  Expert: 'bg-red-500',      // Keep red for expert
-}
-
-export default function ConnectionsGame({ onFinish, onQuit }: ConnectionsGameProps) {
+export default function ConnectionsGame({ onFinish }: ConnectionsGameProps) {
   const { loading, error, categories } = useGenerateGameData()
 
   // Flattened list of all items with references to their category
@@ -90,10 +81,10 @@ export default function ConnectionsGame({ onFinish, onQuit }: ConnectionsGamePro
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-4">
-        <div className="bg-white rounded-xl p-8 shadow-sm border border-slate-200 text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto mb-4"></div>
-          <p className="text-slate-600 font-medium">Loading your game...</p>
+      <div className="min-h-screen bg-white flex items-center justify-center p-4">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mx-auto mb-4"></div>
+          <p className="text-gray-600 font-medium">Loading your game...</p>
         </div>
       </div>
     )
@@ -101,14 +92,10 @@ export default function ConnectionsGame({ onFinish, onQuit }: ConnectionsGamePro
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-4">
-        <div className="bg-white rounded-xl p-8 shadow-sm border border-red-200 text-center max-w-md">
-          <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
-            </svg>
-          </div>
-          <h3 className="text-lg font-semibold text-slate-800 mb-2">Game Error</h3>
+      <div className="min-h-screen bg-white flex items-center justify-center p-4">
+        <div className="text-center max-w-md">
+          <div className="text-4xl mb-4">⚠️</div>
+          <h3 className="text-lg font-semibold text-black mb-2">Game Error</h3>
           <p className="text-red-600 text-sm">{error.message}</p>
         </div>
       </div>
@@ -218,13 +205,12 @@ export default function ConnectionsGame({ onFinish, onQuit }: ConnectionsGamePro
 
   const renderItem = (item: typeof allItems[0]) => {
     const status = getItemStatus(item.id)
-    const difficultyColor = DIFFICULTY_COLORS[item.difficulty]
     const disabled = status === 'solved'
     const isAnimatingThis = animatingIds.includes(item.id)
     
-    // NYT Connections-inspired styling with Shopify colors
+    // Simple minimalist styling to match the design
     const getItemClasses = () => {
-      const baseClasses = 'relative rounded-lg border-2 cursor-pointer select-none transition-all duration-200 flex items-center justify-center aspect-square overflow-hidden w-full group'
+      const baseClasses = 'relative rounded-lg cursor-pointer select-none transition-all duration-200 flex items-center justify-center aspect-square overflow-hidden w-full'
       
       // Animation classes
       let animationClasses = ''
@@ -243,14 +229,14 @@ export default function ConnectionsGame({ onFinish, onQuit }: ConnectionsGamePro
       }
       
       if (status === 'selected') {
-        return `${baseClasses} bg-slate-100 border-slate-800 border-4 shadow-lg ${animationClasses}`
+        return `${baseClasses} bg-gray-300 border-4 border-gray-700 ${animationClasses}`
       }
       
       if (status === 'solved') {
-        return `${baseClasses} ${difficultyColor} border-transparent text-white cursor-default shadow-md ${animationClasses}`
+        return `${baseClasses} bg-gray-200 cursor-default ${animationClasses}`
       }
       
-      return `${baseClasses} bg-slate-100 border-slate-300 hover:bg-slate-200 hover:border-slate-400 hover:shadow-md hover:scale-105 text-slate-800 ${animationClasses}`
+      return `${baseClasses} bg-gray-200 hover:bg-gray-300 ${animationClasses}`
     }
 
     return (
@@ -259,7 +245,7 @@ export default function ConnectionsGame({ onFinish, onQuit }: ConnectionsGamePro
         className={getItemClasses()}
         onClick={() => (disabled ? null : toggleSelect(item.id))}
       >
-        <div className="absolute inset-0 flex items-center justify-center p-2">
+        <div className="absolute inset-0 flex items-center justify-center p-1">
           {(() => {
             const imgUrl = item.product?.featuredImage?.url || item.product?.images?.[0]?.url
             if (imgUrl) {
@@ -267,15 +253,13 @@ export default function ConnectionsGame({ onFinish, onQuit }: ConnectionsGamePro
                 <img 
                   src={imgUrl} 
                   alt={item.product?.title} 
-                  className="w-full h-full object-cover rounded-md"
+                  className="w-full h-full object-cover rounded-lg"
                 />
               )
             }
-            // Fallback to text if no image - styled like NYT Connections
+            // Fallback to text if no image
             return (
-              <span className={`text-sm font-medium text-center px-2 leading-tight ${
-                status === 'solved' ? 'text-white' : 'text-slate-700'
-              }`}>
+              <span className="text-xs font-medium text-center px-1 leading-tight text-gray-700">
                 {item.product?.title || 'Product'}
               </span>
             )
@@ -338,137 +322,94 @@ export default function ConnectionsGame({ onFinish, onQuit }: ConnectionsGamePro
         }
       `}</style>
       
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4">
-        <div className="max-w-2xl mx-auto pt-8">
-        {/* Game Title */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-slate-800 mb-2">Connections</h1>
-          <p className="text-slate-600 text-sm">Find groups of four items that share something in common.</p>
-        </div>
-
-        {/* Header Stats */}
-        <div className="flex justify-between items-center mb-6 bg-white rounded-xl p-4 shadow-sm border border-slate-200">
-          <div className="flex items-center space-x-6">
-            {/* Lives Display */}
-            <div className="flex items-center space-x-2">
-              <span className="text-sm font-medium text-slate-700">Mistakes:</span>
-              <div className="flex space-x-1">
-                {Array.from({ length: lives }, (_, i) => (
-                  <div
-                    key={i}
-                    className={`w-3 h-3 rounded-full ${
-                      i < mistakes ? 'bg-red-400' : 'bg-slate-200'
-                    }`}
-                  />
-                ))}
-              </div>
-            </div>
-            
-            {/* Progress */}
-            <div className="text-sm text-slate-600">
-              <span className="font-medium text-slate-700">{solvedCategoryKeys.length}</span>/4 groups found
-            </div>
+      <div className="min-h-screen bg-white p-4">
+        <div className="max-w-md mx-auto pt-8">
+          {/* Game Title */}
+          <div className="text-center mb-8">
+            <h1 className="text-2xl font-bold text-black mb-2">Can you find any links?</h1>
+            <p className="text-gray-500 text-base">Link together groups of 4 items</p>
           </div>
-          
-          {onQuit && (
-            <button 
-              className="text-slate-500 hover:text-red-500 text-sm font-medium transition-colors duration-200" 
-              onClick={onQuit}
-            >
-              Quit Game
-            </button>
-          )}
-        </div>
 
-        {/* Solved Categories */}
-        {solvedCategories.length > 0 && (
-          <div className="mb-6 space-y-3">
-            {solvedCategories.map((solvedCat) => (
-              <div key={solvedCat.category} className="bg-white rounded-xl p-4 shadow-sm border border-slate-200 slide-down">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-semibold text-slate-800">{solvedCat.category}</h3>
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium text-white ${DIFFICULTY_COLORS[solvedCat.difficulty]}`}>
-                    {solvedCat.difficulty}
-                  </span>
-                </div>
-                <div className="grid grid-cols-4 gap-3">
-                  {solvedCat.items.map((item) => (
-                    <div
-                      key={item.id}
-                      className={`relative rounded-lg border-2 border-transparent flex items-center justify-center aspect-square overflow-hidden w-full ${DIFFICULTY_COLORS[solvedCat.difficulty]} text-white shadow-md`}
-                    >
-                      <div className="absolute inset-0 flex items-center justify-center p-2">
-                        {(() => {
-                          const imgUrl = item.product?.featuredImage?.url || item.product?.images?.[0]?.url
-                          if (imgUrl) {
+          {/* Solved Categories */}
+          {solvedCategories.length > 0 && (
+            <div className="mb-6 space-y-4">
+              {solvedCategories.map((solvedCat) => (
+                <div key={solvedCat.category} className="bg-green-100 rounded-xl p-4 slide-down">
+                  <div className="text-center mb-3">
+                    <h3 className="font-bold text-black text-sm uppercase tracking-wide">{solvedCat.category}</h3>
+                  </div>
+                  <div className="grid grid-cols-4 gap-2">
+                    {solvedCat.items.map((item) => (
+                      <div
+                        key={item.id}
+                        className="relative rounded-lg bg-gray-200 flex items-center justify-center aspect-square overflow-hidden w-full"
+                      >
+                        <div className="absolute inset-0 flex items-center justify-center p-2">
+                          {(() => {
+                            const imgUrl = item.product?.featuredImage?.url || item.product?.images?.[0]?.url
+                            if (imgUrl) {
+                              return (
+                                <img 
+                                  src={imgUrl} 
+                                  alt={item.product?.title} 
+                                  className="w-full h-full object-cover rounded-lg"
+                                />
+                              )
+                            }
                             return (
-                              <img 
-                                src={imgUrl} 
-                                alt={item.product?.title} 
-                                className="w-full h-full object-cover rounded-md"
-                              />
+                              <span className="text-xs font-medium text-center px-1 leading-tight text-gray-700">
+                                {item.product?.title || 'Product'}
+                              </span>
                             )
-                          }
-                          return (
-                            <span className="text-sm font-medium text-center px-2 leading-tight text-white">
-                              {item.product?.title || 'Product'}
-                            </span>
-                          )
-                        })()}
+                          })()}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
+              ))}
+            </div>
+          )}
 
-        {/* Game Grid */}
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200 mb-6">
-          <div className="grid grid-cols-4 gap-3">
-            {shuffledItems.map(renderItem)}
+          {/* Game Grid */}
+          <div className="mb-6">
+            <div className="grid grid-cols-4 gap-2">
+              {shuffledItems.map(renderItem)}
+            </div>
           </div>
-        </div>
 
-        {/* Action Area */}
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
-          {/* Submit Button */}
-          <button
-            className={`w-full py-4 rounded-xl font-semibold text-white transition-all duration-200 mb-4 ${
-              selectedIds.length === 4 && !gameOver && !isAnimating
-                ? 'bg-green-600 hover:bg-green-700 shadow-lg hover:shadow-xl transform hover:scale-105'
-                : 'bg-slate-300 cursor-not-allowed'
-            }`}
-            disabled={selectedIds.length !== 4 || gameOver || isAnimating}
-            onClick={submitGuess}
-          >
-            {gameOver ? 'Game Over' : 
-             isAnimating ? 'Processing...' :
-             `Submit Guess (${selectedIds.length}/4 selected)`}
-          </button>
-          
-          {/* Selection Counter */}
-          <div className="flex justify-center space-x-1 mb-4">
-            {Array.from({ length: 4 }, (_, i) => (
-              <div
-                key={i}
-                className={`w-3 h-3 rounded-full transition-colors duration-200 ${
-                  i < selectedIds.length ? 'bg-green-500' : 'bg-slate-200'
-                }`}
-              />
-            ))}
+          {/* Action Buttons */}
+          <div className="flex gap-3 mb-6">
+            <button className="flex-1 py-3 rounded-full border-2 border-purple-500 text-purple-500 font-semibold bg-white hover:bg-purple-50 transition-colors">
+              Hint
+            </button>
+            <button
+              className={`flex-1 py-3 rounded-full font-semibold transition-all duration-200 ${
+                selectedIds.length === 4 && !gameOver && !isAnimating
+                  ? 'bg-purple-500 text-white hover:bg-purple-600'
+                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              }`}
+              disabled={selectedIds.length !== 4 || gameOver || isAnimating}
+              onClick={submitGuess}
+            >
+              {gameOver ? 'Game Over' : 
+               isAnimating ? 'Processing...' :
+               'Submit'}
+            </button>
           </div>
           
-          {/* Game Stats */}
+          {/* Mistakes Display with Lightning Icons */}
           <div className="text-center">
-            <div className="text-sm text-slate-600">
-              <span className="font-medium text-slate-700">{totalGuesses}</span> guesses made
+            <div className="flex justify-center space-x-1">
+              {Array.from({ length: lives }, (_, i) => (
+                <span key={i} className={`text-2xl ${i < mistakes ? 'text-gray-300' : 'text-black'}`}>
+                  ⚡
+                </span>
+              ))}
             </div>
           </div>
         </div>
       </div>
-    </div>
     </>
   )
 }
