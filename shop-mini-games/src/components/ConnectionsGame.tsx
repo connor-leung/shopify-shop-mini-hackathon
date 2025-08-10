@@ -55,6 +55,13 @@ export default function ConnectionsGame({ onFinish }: ConnectionsGameProps) {
   const [startTime] = useState(() => Date.now())
   const [totalGuesses, setTotalGuesses] = useState(0)
   
+  // Hint state - track hints available (starts with 1, gets +1 for each solved category)
+  const [hintsAvailable, setHintsAvailable] = useState(1)
+  const [hintedItems, setHintedItems] = useState<string[]>([])
+  
+  // End game state
+  const [showingAnswers, setShowingAnswers] = useState(false)
+  
   // Animation state
   const [animatingIds, setAnimatingIds] = useState<string[]>([])
   const [animationType, setAnimationType] = useState<'error' | 'success' | null>(null)
@@ -67,17 +74,22 @@ export default function ConnectionsGame({ onFinish }: ConnectionsGameProps) {
   const won = solvedCategoryKeys.length === 4 && remainingLives >= 0
 
   useEffect(() => {
-    if (gameOver) {
-      const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000)
-      onFinish({
-        won,
-        solvedCategories: solvedCategories.map((c) => ({ difficulty: c.difficulty, category: c.category })),
-        mistakes,
-        elapsedSeconds,
-        totalGuesses,
-      })
+    if (gameOver && !showingAnswers) {
+      // Automatically show answers when game ends
+      setShowingAnswers(true)
     }
-  }, [gameOver, won, solvedCategories, mistakes, totalGuesses, startTime, onFinish])
+  }, [gameOver, showingAnswers])
+
+  const handleSeeResults = () => {
+    const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000)
+    onFinish({
+      won,
+      solvedCategories: solvedCategories.map((c) => ({ difficulty: c.difficulty, category: c.category })),
+      mistakes,
+      elapsedSeconds,
+      totalGuesses,
+    })
+  }
 
   if (loading) {
     return (
@@ -165,6 +177,14 @@ export default function ConnectionsGame({ onFinish }: ConnectionsGameProps) {
     // Remove from main grid
     setShuffledItems((items) => items.filter((item) => !ids.includes(item.id)))
     
+    // Remove solved items from hinted items list
+    setHintedItems((hinted) => hinted.filter((id) => !ids.includes(id)))
+    
+    // Add a hint for solving this category (unless it's the last one)
+    if (solvedCategories.length < 3) { // Will be 4 after this update, so check for < 3
+      setHintsAvailable(prev => prev + 1)
+    }
+    
     // Clear animations
     setAnimatingIds([])
     setAnimationType(null)
@@ -196,10 +216,43 @@ export default function ConnectionsGame({ onFinish }: ConnectionsGameProps) {
     setSelectedIds([])
   }
 
+  const useHint = () => {
+    if (hintsAvailable <= 0 || gameOver || isAnimating) return
+
+    // Find an unsolved category that hasn't been hinted yet
+    const unsolvedCategories = categories.filter(cat => !solvedCategoryKeys.includes(cat.category))
+    
+    // Find a category where we haven't hinted any items yet
+    let targetCategory = null
+    for (const cat of unsolvedCategories) {
+      const categoryItemIds = cat.items.map(item => item.id)
+      const alreadyHintedInThisCategory = hintedItems.filter(id => categoryItemIds.includes(id)).length
+      
+      // Only hint categories that haven't been hinted at all
+      if (alreadyHintedInThisCategory === 0) {
+        targetCategory = cat
+        break
+      }
+    }
+    
+    if (!targetCategory) return
+
+    const categoryItemIds = targetCategory.items.map(item => item.id)
+    
+    // Reveal 3 items from this category
+    const itemsToHint = categoryItemIds.slice(0, 3)
+    
+    if (itemsToHint.length > 0) {
+      setHintedItems(prev => [...prev, ...itemsToHint])
+      setHintsAvailable(prev => prev - 1)
+    }
+  }
+
   const getItemStatus = (id: string) => {
     if (selectedIds.includes(id)) return 'selected'
     const solvedCat = categories.find((cat) => solvedCategoryKeys.includes(cat.category) && cat.items.some((it) => it.id === id))
     if (solvedCat) return 'solved'
+    if (hintedItems.includes(id)) return 'hinted'
     return 'default'
   }
 
@@ -236,6 +289,10 @@ export default function ConnectionsGame({ onFinish }: ConnectionsGameProps) {
         return `${baseClasses} bg-gray-200 cursor-default ${animationClasses}`
       }
       
+      if (status === 'hinted') {
+        return `${baseClasses} hover:bg-gray-100 ${animationClasses} ring-2 ring-purple-300 ring-opacity-50`
+      }
+      
       return `${baseClasses} hover:bg-gray-100 ${animationClasses}`
     }
 
@@ -266,6 +323,10 @@ export default function ConnectionsGame({ onFinish }: ConnectionsGameProps) {
                   {/* Black overlay for selected items */}
                   {status === 'selected' && (
                     <div className="absolute inset-0 bg-black/40 rounded-lg" />
+                  )}
+                  {/* Purple tint overlay for hinted items */}
+                  {status === 'hinted' && (
+                    <div className="absolute inset-0 bg-purple-300/20 rounded-lg" />
                   )}
                 </div>
               )
@@ -356,20 +417,28 @@ export default function ConnectionsGame({ onFinish }: ConnectionsGameProps) {
         <div className="max-w-md mx-auto pt-8">
           {/* Game Title */}
           <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold text-black mb-2">Can you find any links?</h1>
-            <p className="text-gray-500 text-base">Link together groups of 4 items</p>
+            <h1 className="text-2xl font-bold text-black mb-2">
+              {showingAnswers ? (won ? 'Nice Work!' : 'You ran out of tries.') : 'Can you find any links?'}
+            </h1>
+            {!showingAnswers && <p className="text-gray-500 text-base">Link together groups of 4 items</p>}
           </div>
 
-          {/* Solved Categories */}
-          {solvedCategories.length > 0 && (
+          {/* Categories Display */}
+          {(solvedCategories.length > 0 || showingAnswers) && (
             <div className="mb-6 space-y-4">
-              {solvedCategories.map((solvedCat) => (
-                <div key={solvedCat.category} className="bg-green-100 rounded-xl p-4 slide-down">
-                  <div className="text-center mb-3">
-                    <h3 className="font-bold text-black text-sm uppercase tracking-wide">{solvedCat.category}</h3>
-                  </div>
-                  <div className="grid grid-cols-4 gap-2">
-                    {solvedCat.items.map((item) => (
+              {(showingAnswers ? categories : solvedCategories).map((cat) => {
+                const categoryItems = showingAnswers ? cat.items : cat.items;
+                const isCorrectlyGuessed = solvedCategories.some(solved => solved.category === cat.category);
+                
+                return (
+                  <div key={cat.category} className={`rounded-xl p-4 slide-down ${
+                    isCorrectlyGuessed ? 'bg-green-100' : 'bg-red-100'
+                  }`}>
+                    <div className="text-center mb-3">
+                      <h3 className="font-bold text-black text-sm uppercase tracking-wide">{cat.category}</h3>
+                    </div>
+                    <div className="grid grid-cols-4 gap-2">
+                      {categoryItems.map((item) => (
                       <div
                         key={item.id}
                         className="relative rounded-lg bg-gray-200 flex items-center justify-center aspect-square overflow-hidden w-full"
@@ -401,24 +470,47 @@ export default function ConnectionsGame({ onFinish }: ConnectionsGameProps) {
                           })()}
                         </div>
                       </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
 
-          {/* Game Grid */}
-          <div className="mb-6">
-            <div className="grid grid-cols-4 gap-2">
-              {shuffledItems.map(renderItem)}
+          {/* Game Grid - only show when not showing answers */}
+          {!showingAnswers && (
+            <div className="mb-6">
+              <div className="grid grid-cols-4 gap-2">
+                {shuffledItems.map(renderItem)}
+              </div>
             </div>
-          </div>
+          )}
 
-          {/* Action Buttons */}
-          <div className="flex gap-3 mb-6">
-            <button className="flex-1 py-3 rounded-full border-2 font-semibold bg-white transition-colors" style={{borderColor: '#4F34E2', color: '#4F34E2'}} onMouseEnter={(e) => e.target.style.backgroundColor = '#F8F6FF'} onMouseLeave={(e) => e.target.style.backgroundColor = 'white'}>
-              Hint
+          {/* Action Buttons - only show when not showing answers */}
+          {!showingAnswers && (
+            <div className="flex gap-3 mb-6">
+                        <button 
+              className={`flex-1 py-3 rounded-full border-2 font-semibold transition-all duration-200 ${
+                hintsAvailable <= 0 || gameOver
+                  ? 'bg-gray-100 text-gray-400 border-gray-300 cursor-not-allowed'
+                  : 'bg-white transition-colors'
+              }`}
+              style={hintsAvailable > 0 && !gameOver ? {borderColor: '#4F34E2', color: '#4F34E2'} : {}}
+              disabled={hintsAvailable <= 0 || gameOver || isAnimating}
+              onClick={useHint}
+              onMouseEnter={(e) => {
+                if (hintsAvailable > 0 && !gameOver && !isAnimating) {
+                  (e.target as HTMLButtonElement).style.backgroundColor = '#F8F6FF'
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (hintsAvailable > 0 && !gameOver && !isAnimating) {
+                  (e.target as HTMLButtonElement).style.backgroundColor = 'white'
+                }
+              }}
+            >
+              Hint{hintsAvailable > 1 ? ` (${hintsAvailable})` : ''}
             </button>
             <button
               className={`flex-1 py-3 rounded-full font-semibold transition-all duration-200 ${
@@ -431,12 +523,12 @@ export default function ConnectionsGame({ onFinish }: ConnectionsGameProps) {
               onClick={submitGuess}
               onMouseEnter={(e) => {
                 if (selectedIds.length === 4 && !gameOver && !isAnimating) {
-                  e.target.style.backgroundColor = '#3D26B8'
+                  (e.target as HTMLButtonElement).style.backgroundColor = '#3D26B8'
                 }
               }}
               onMouseLeave={(e) => {
                 if (selectedIds.length === 4 && !gameOver && !isAnimating) {
-                  e.target.style.backgroundColor = '#4F34E2'
+                  (e.target as HTMLButtonElement).style.backgroundColor = '#4F34E2'
                 }
               }}
             >
@@ -444,10 +536,31 @@ export default function ConnectionsGame({ onFinish }: ConnectionsGameProps) {
                isAnimating ? 'Processing...' :
                'Submit'}
             </button>
-          </div>
+            </div>
+          )}
           
-          {/* Mistakes Display with Lightning Icons */}
-          <div className="text-center">
+          {/* See Results Button - only show when showing answers */}
+          {showingAnswers && (
+            <div className="mb-6">
+              <button
+                className="w-full py-3 rounded-full font-semibold text-white transition-all duration-200"
+                style={{backgroundColor: '#4F34E2'}}
+                onClick={handleSeeResults}
+                onMouseEnter={(e) => {
+                  (e.target as HTMLButtonElement).style.backgroundColor = '#3D26B8'
+                }}
+                onMouseLeave={(e) => {
+                  (e.target as HTMLButtonElement).style.backgroundColor = '#4F34E2'
+                }}
+              >
+                See Results
+              </button>
+            </div>
+          )}
+          
+          {/* Mistakes Display with Lightning Icons - only show when not showing answers */}
+          {!showingAnswers && (
+            <div className="text-center">
             <div className="flex justify-center space-x-1">
               {Array.from({ length: lives }, (_, i) => (
                 <span key={i} className={`text-2xl ${i < mistakes ? 'text-gray-300' : 'text-black'}`}>
@@ -455,7 +568,8 @@ export default function ConnectionsGame({ onFinish }: ConnectionsGameProps) {
                 </span>
               ))}
             </div>
-          </div>
+            </div>
+          )}
         </div>
       </div>
     </>
