@@ -431,17 +431,17 @@ export default function ConnectionsGame({ onFinish }: ConnectionsGameProps) {
                 const isCorrectlyGuessed = solvedCategories.some(solved => solved.category === cat.category);
                 
                 return (
-                  <div key={cat.category} className={`rounded-xl p-4 slide-down ${
+                  <div key={cat.category} className={`rounded-xl p-3 slide-down ${
                     isCorrectlyGuessed ? 'bg-green-100' : 'bg-red-100'
                   }`}>
-                    <div className="text-center mb-3">
+                    <div className="text-center mb-2">
                       <h3 className="font-bold text-black text-sm uppercase tracking-wide">{cat.category}</h3>
                     </div>
-                    <div className="grid grid-cols-4 gap-2">
+                    <div className="flex gap-2 justify-center">
                       {categoryItems.map((item) => (
                       <div
                         key={item.id}
-                        className="relative rounded-lg bg-gray-200 flex items-center justify-center aspect-square overflow-hidden w-full"
+                        className="relative rounded-lg bg-gray-200 flex items-center justify-center overflow-hidden w-16 h-16 flex-shrink-0"
                       >
                         <div className="absolute inset-0 flex items-center justify-center">
                           {(() => {
@@ -463,7 +463,7 @@ export default function ConnectionsGame({ onFinish }: ConnectionsGameProps) {
                             return (
                               <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg">
                                 <span className="text-xs font-medium text-center px-1 leading-tight text-gray-700">
-                                  {productTitle}
+                                  {productTitle.length > 8 ? productTitle.substring(0, 8) + '...' : productTitle}
                                 </span>
                               </div>
                             )
