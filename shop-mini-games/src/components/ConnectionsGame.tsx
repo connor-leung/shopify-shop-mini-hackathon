@@ -229,14 +229,14 @@ export default function ConnectionsGame({ onFinish }: ConnectionsGameProps) {
       }
       
       if (status === 'selected') {
-        return `${baseClasses} bg-gray-200 ${animationClasses}`
+        return `${baseClasses} ${animationClasses}`
       }
       
       if (status === 'solved') {
         return `${baseClasses} bg-gray-200 cursor-default ${animationClasses}`
       }
       
-      return `${baseClasses} bg-gray-200 hover:bg-gray-300 ${animationClasses}`
+      return `${baseClasses} hover:bg-gray-100 ${animationClasses}`
     }
 
     return (
