@@ -2,11 +2,11 @@ import { useEffect, useMemo, useState } from 'react'
 import { useGenerateGameData } from '../utils/useGenerateGameData'
 
 // Add difficulty color palette constant after imports
-const DIFFICULTY_COLORS: Record<string,string> = {
-  easy: '#92D08D',
-  medium: '#82DEBD',
-  hard: '#9C83F8',
-  expert: '#FF967D',
+const DIFFICULTY_COLORS: Record<string, { fill: string, stroke: string }> = {
+  easy: { fill: '#E2F1E2', stroke: '#92D08D' },
+  medium: { fill: '#DBF2EE', stroke: '#82DEBD' },
+  hard: { fill: '#E1D9FD', stroke: '#9C83F8' },
+  expert: { fill: '#F8DBDE', stroke: '#FF967D' },
 };
 
 interface ConnectionsGameProps {
@@ -298,7 +298,7 @@ export default function ConnectionsGame({ onFinish }: ConnectionsGameProps) {
       }
 
       if (status === 'hinted') {
-        return `${baseClasses} hover:bg-gray-100 ${animationClasses} ring-2 ring-purple-300 ring-opacity-50`
+        return `${baseClasses} hover:bg-gray-100 ${animationClasses} ring-2 ring-opacity-50`
       }
 
       return `${baseClasses} hover:bg-gray-100 ${animationClasses}`
@@ -308,6 +308,7 @@ export default function ConnectionsGame({ onFinish }: ConnectionsGameProps) {
       <div
         key={item.id}
         className={getItemClasses()}
+        style={status === 'hinted' ? { boxShadow: '0 0 0 2px #9C83F8' } : {}}
         onClick={() => (disabled ? null : toggleSelect(item.id))}
       >
         <div className="absolute inset-0 flex items-center justify-center">
@@ -328,17 +329,21 @@ export default function ConnectionsGame({ onFinish }: ConnectionsGameProps) {
                   />
                   {/* Subtle gradient overlay for uniformity */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-transparent rounded-lg" />
-                  {/* Black/Red overlay for selected items */}
+                  {/* Black/Orange overlay for selected items */}
                   {status === 'selected' && (
                     <div className={`absolute inset-0 rounded-lg ${
                       isAnimatingThis && animationType === 'error' && animatingIds.length > 1 
-                        ? 'bg-red-500/60' 
+                        ? 'bg-black/40' 
                         : 'bg-black/40'
-                    }`} />
+                    }`} style={
+                      isAnimatingThis && animationType === 'error' && animatingIds.length > 1 
+                        ? { backgroundColor: '#FF967D', opacity: 0.6 }
+                        : {}
+                    } />
                   )}
                   {/* Purple tint overlay for hinted items */}
                   {status === 'hinted' && (
-                    <div className="absolute inset-0 bg-purple-300/20 rounded-lg" />
+                    <div className="absolute inset-0 rounded-lg" style={{ backgroundColor: '#9C83F8', opacity: 0.2 }} />
                   )}
                 </div>
               )
@@ -442,11 +447,12 @@ export default function ConnectionsGame({ onFinish }: ConnectionsGameProps) {
                 const categoryItems = showingAnswers ? cat.items : cat.items;
                 
                 // Always use difficulty-based colors
-                const backgroundColor = DIFFICULTY_COLORS[cat.difficulty.toLowerCase()] || DIFFICULTY_COLORS.easy
+                const colors = DIFFICULTY_COLORS[cat.difficulty.toLowerCase()] || DIFFICULTY_COLORS.easy
                 
                 return (
-                  <div key={cat.category} className="rounded-xl p-3 slide-down" style={{
-                    backgroundColor
+                  <div key={cat.category} className="rounded-xl p-3 slide-down border-2" style={{
+                    backgroundColor: colors.fill,
+                    borderColor: colors.stroke
                   }}>
                     <div className="text-center mb-2">
                       <h3 className="font-bold text-black text-sm uppercase tracking-wide">{cat.category}</h3>
