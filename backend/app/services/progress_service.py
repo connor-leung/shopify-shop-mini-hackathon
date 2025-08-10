@@ -16,7 +16,8 @@ class ProgressService:
             user_id=progress_data.user_id,
             completion_time=progress_data.completion_time,
             score=progress_data.score,
-            completed=progress_data.completed
+            completed=progress_data.completed,
+            lives_remaining=progress_data.lives_remaining
         )
         self.db.add(db_progress)
         
@@ -102,10 +103,14 @@ class ProgressService:
         if user_stats.best_time is None or progress_data.completion_time < user_stats.best_time:
             user_stats.best_time = progress_data.completion_time
         
-        # Calculate average time
-        avg_query = self.db.query(func.avg(UserProgress.completion_time))\
+        # Calculate average time and lives
+        avg_time_query = self.db.query(func.avg(UserProgress.completion_time))\
             .filter(UserProgress.user_id == user_id)
-        user_stats.average_time = avg_query.scalar()
+        user_stats.average_time = avg_time_query.scalar()
+        
+        avg_lives_query = self.db.query(func.avg(UserProgress.lives_remaining))\
+            .filter(UserProgress.user_id == user_id)
+        user_stats.average_lives_remaining = avg_lives_query.scalar()
         
         # Update streak
         self._update_streak(user_stats)
@@ -140,3 +145,81 @@ class ProgressService:
         # Update longest streak
         if user_stats.current_streak > user_stats.longest_streak:
             user_stats.longest_streak = user_stats.current_streak
+    
+    def get_game_stats(self):
+        """Get overall game statistics"""
+        total_games = self.db.query(func.count(UserProgress.id)).scalar() or 0
+        total_players = self.db.query(func.count(func.distinct(UserProgress.user_id))).scalar() or 0
+        
+        if total_games == 0:
+            return {
+                "total_players": 0,
+                "average_completion_time": 0.0,
+                "average_lives_remaining": 0.0,
+                "total_games_played": 0,
+                "completion_rate": 0.0
+            }
+        
+        avg_time = self.db.query(func.avg(UserProgress.completion_time)).scalar() or 0.0
+        avg_lives = self.db.query(func.avg(UserProgress.lives_remaining)).scalar() or 0.0
+        completed_games = self.db.query(func.count(UserProgress.id))\
+            .filter(UserProgress.completed == True).scalar() or 0
+        
+        return {
+            "total_players": total_players,
+            "average_completion_time": round(avg_time, 2),
+            "average_lives_remaining": round(avg_lives, 2),
+            "total_games_played": total_games,
+            "completion_rate": round((completed_games / total_games) * 100, 2) if total_games > 0 else 0.0
+        }
+    
+    def get_mock_leaderboard(self, user_id: str = None, limit: int = 10):
+        """Get mock leaderboard with realistic data"""
+        import random
+        
+        # Mock usernames for demo
+        mock_users = [
+            "SpeedRunner42", "GameMaster", "QuickSolver", "PuzzleKing", "FastFinisher",
+            "TimeBeater", "LifeSaver", "ProGamer", "SwiftPlayer", "ChampionSolver",
+            "RushExpert", "BlazeRunner", "NinjaPlayer", "TurboSolver", "FlashGamer"
+        ]
+        
+        # Generate mock leaderboard entries
+        entries = []
+        for i, username in enumerate(mock_users[:limit]):
+            # Generate realistic times (15-120 seconds)
+            best_time = round(random.uniform(15.5, 120.0), 2)
+            total_games = random.randint(5, 50)
+            avg_lives = round(random.uniform(1.2, 4.8), 1)
+            
+            entries.append({
+                "rank": i + 1,
+                "user_id": username,
+                "best_time": best_time,
+                "total_games": total_games,
+                "average_lives": avg_lives
+            })
+        
+        # Sort by best time
+        entries.sort(key=lambda x: x["best_time"])
+        
+        # Update ranks after sorting
+        for i, entry in enumerate(entries):
+            entry["rank"] = i + 1
+        
+        # Find user's rank if provided
+        your_rank = None
+        if user_id:
+            # Get user's actual best time or generate one
+            user_stats = self.get_user_stats(user_id)
+            if user_stats and user_stats.best_time:
+                user_time = user_stats.best_time
+                your_rank = sum(1 for entry in entries if entry["best_time"] < user_time) + 1
+            else:
+                your_rank = random.randint(limit + 1, limit + 20)
+        
+        return {
+            "entries": entries,
+            "your_rank": your_rank,
+            "total_players": len(mock_users) + random.randint(50, 200)
+        }

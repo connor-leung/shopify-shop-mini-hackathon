@@ -58,11 +58,13 @@ python run.py
 
 ### Progress Tracking
 
-- `POST /api/progress/` - Create new progress entry
+- `POST /api/progress/` - Create new progress entry (now includes lives_remaining)
 - `GET /api/progress/user/{user_id}` - Get user's recent progress
-- `GET /api/progress/user/{user_id}/stats` - Get user statistics
+- `GET /api/progress/user/{user_id}/stats` - Get user statistics (includes average lives)
 - `GET /api/progress/user/{user_id}/daily` - Get daily progress
 - `GET /api/progress/leaderboard` - Get leaderboard
+- `GET /api/progress/game-stats` - Get overall game statistics
+- `GET /api/progress/mock-leaderboard` - Get mock leaderboard with realistic data
 
 ### Health Check
 

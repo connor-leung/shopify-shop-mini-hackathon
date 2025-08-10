@@ -11,6 +11,7 @@ class UserProgress(Base):
     completion_time = Column(Float, nullable=False)  # in seconds
     score = Column(Integer, default=0)
     completed = Column(Boolean, default=True)
+    lives_remaining = Column(Integer, default=3)  # lives left after completion
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
     
@@ -28,6 +29,7 @@ class UserStats(Base):
     total_games_played = Column(Integer, default=0)
     best_time = Column(Float, nullable=True)  # fastest completion time
     average_time = Column(Float, nullable=True)
+    average_lives_remaining = Column(Float, nullable=True)  # average lives remaining
     total_score = Column(Integer, default=0)
     current_streak = Column(Integer, default=0)  # consecutive days played
     longest_streak = Column(Integer, default=0)

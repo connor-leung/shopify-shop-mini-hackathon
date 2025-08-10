@@ -7,6 +7,7 @@ class ProgressCreate(BaseModel):
     completion_time: float = Field(..., gt=0, description="Completion time in seconds")
     score: Optional[int] = Field(default=0, ge=0)
     completed: bool = Field(default=True)
+    lives_remaining: Optional[int] = Field(default=3, ge=0, le=5, description="Lives remaining after completion")
 
 class ProgressResponse(BaseModel):
     id: int
@@ -15,6 +16,7 @@ class ProgressResponse(BaseModel):
     completion_time: float
     score: int
     completed: bool
+    lives_remaining: int
     created_at: datetime
     
     class Config:
@@ -25,6 +27,7 @@ class UserStatsResponse(BaseModel):
     total_games_played: int
     best_time: Optional[float]
     average_time: Optional[float]
+    average_lives_remaining: Optional[float]
     total_score: int
     current_streak: int
     longest_streak: int
@@ -49,3 +52,22 @@ class LeaderboardEntry(BaseModel):
 class LeaderboardResponse(BaseModel):
     entries: List[LeaderboardEntry]
     total_users: int
+
+class GameStatsResponse(BaseModel):
+    total_players: int
+    average_completion_time: float
+    average_lives_remaining: float
+    total_games_played: int
+    completion_rate: float
+
+class MockLeaderboardEntry(BaseModel):
+    rank: int
+    user_id: str
+    best_time: float
+    total_games: int
+    average_lives: float
+    
+class MockLeaderboardResponse(BaseModel):
+    entries: List[MockLeaderboardEntry]
+    your_rank: Optional[int] = None
+    total_players: int

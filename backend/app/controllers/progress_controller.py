@@ -6,7 +6,8 @@ from ..database import get_db
 from ..services.progress_service import ProgressService
 from ..schemas.progress_schemas import (
     ProgressCreate, ProgressResponse, UserStatsResponse, 
-    DailyProgressResponse, LeaderboardResponse, LeaderboardEntry
+    DailyProgressResponse, LeaderboardResponse, LeaderboardEntry,
+    GameStatsResponse, MockLeaderboardResponse, MockLeaderboardEntry
 )
 
 router = APIRouter(prefix="/api/progress", tags=["progress"])
@@ -52,6 +53,7 @@ async def get_user_stats(
         total_games_played=stats.total_games_played,
         best_time=stats.best_time,
         average_time=stats.average_time,
+        average_lives_remaining=stats.average_lives_remaining,
         total_score=stats.total_score,
         current_streak=stats.current_streak,
         longest_streak=stats.longest_streak,
@@ -99,4 +101,45 @@ async def get_leaderboard(
     return LeaderboardResponse(
         entries=entries,
         total_users=len(entries)
+    )
+
+@router.get("/game-stats", response_model=GameStatsResponse)
+async def get_game_stats(db: Session = Depends(get_db)):
+    """Get overall game statistics"""
+    service = ProgressService(db)
+    stats = service.get_game_stats()
+    
+    return GameStatsResponse(
+        total_players=stats["total_players"],
+        average_completion_time=stats["average_completion_time"],
+        average_lives_remaining=stats["average_lives_remaining"],
+        total_games_played=stats["total_games_played"],
+        completion_rate=stats["completion_rate"]
+    )
+
+@router.get("/mock-leaderboard", response_model=MockLeaderboardResponse)
+async def get_mock_leaderboard(
+    user_id: Optional[str] = Query(default=None, description="User ID to find rank for"),
+    limit: int = Query(default=10, le=50),
+    db: Session = Depends(get_db)
+):
+    """Get mock leaderboard with realistic data"""
+    service = ProgressService(db)
+    leaderboard_data = service.get_mock_leaderboard(user_id, limit)
+    
+    entries = [
+        MockLeaderboardEntry(
+            rank=entry["rank"],
+            user_id=entry["user_id"],
+            best_time=entry["best_time"],
+            total_games=entry["total_games"],
+            average_lives=entry["average_lives"]
+        )
+        for entry in leaderboard_data["entries"]
+    ]
+    
+    return MockLeaderboardResponse(
+        entries=entries,
+        your_rank=leaderboard_data["your_rank"],
+        total_players=leaderboard_data["total_players"]
     )
