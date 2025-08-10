@@ -1,43 +1,50 @@
-import { usePopularProducts, ProductCard } from '@shopify/shop-minis-react'
+import { usePopularProducts, ProductCard } from "@shopify/shop-minis-react";
 
 interface HomePageProps {
-  onNavigate: (page: string) => void
+  onNavigate: (page: string) => void;
 }
 
 export function HomePage({ onNavigate }: HomePageProps) {
-  const { products } = usePopularProducts()
+  const { products } = usePopularProducts();
 
   return (
     <div className="pt-12 px-4 pb-6">
       <h1 className="text-2xl font-bold mb-2 text-center">
         Welcome to Mini Mini Games!
       </h1>
-      
+
       <div className="flex justify-center space-x-4 mb-6">
-        <button 
-          onClick={() => onNavigate('home')}
+        <button
+          onClick={() => onNavigate("home")}
           className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
         >
           Home
         </button>
-        <button 
-          onClick={() => onNavigate('search')}
+        <button
+          onClick={() => onNavigate("search")}
           className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
         >
           Search Products
         </button>
-        <button 
-          onClick={() => onNavigate('demo')}
+        <button
+          onClick={() => onNavigate("demo")}
           className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 transition-colors"
         >
           Question Demo
         </button>
 
         <button
-          onClick={() => onNavigate('connections-intro')}
+          onClick={() => onNavigate("connections-intro")}
           className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
         >
           Play Connections
+        </button>
+
+        <button
+          onClick={() => onNavigate("mini-hunt")}
+          className="px-4 py-2 bg-indigo-500 text-white rounded hover:bg-indigo-600 transition-colors"
+        >
+          Mini Hunt
         </button>
       </div>
 
@@ -47,5 +54,5 @@ export function HomePage({ onNavigate }: HomePageProps) {
         ))}
       </div>
     </div>
-  )
+  );
 }

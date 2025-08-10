@@ -1,9 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from datetime import date, datetime
 from typing import List, Optional
 from ..database import get_db
 from ..services.progress_service import ProgressService
+from ..models.user_progress import UserProgress
 from ..schemas.progress_schemas import (
     ProgressCreate, ProgressResponse, UserStatsResponse, 
     DailyProgressResponse, LeaderboardResponse, LeaderboardEntry,
@@ -142,4 +144,49 @@ async def get_mock_leaderboard(
         entries=entries,
         your_rank=leaderboard_data["your_rank"],
         total_players=leaderboard_data["total_players"]
+    )@rou
+ter.get("/game-stats/{game_type}", response_model=GameStatsResponse)
+async def get_game_type_stats(
+    game_type: str,
+    db: Session = Depends(get_db)
+):
+    """Get statistics for a specific game type"""
+    service = ProgressService(db)
+    
+    # Filter by game type
+    total_games = db.query(func.count(UserProgress.id))\
+        .filter(UserProgress.game_type == game_type)\
+        .scalar() or 0
+    
+    total_players = db.query(func.count(func.distinct(UserProgress.user_id)))\
+        .filter(UserProgress.game_type == game_type)\
+        .scalar() or 0
+    
+    if total_games == 0:
+        return GameStatsResponse(
+            total_players=0,
+            average_completion_time=0.0,
+            average_lives_remaining=0.0,
+            total_games_played=0,
+            completion_rate=0.0
+        )
+    
+    avg_time = db.query(func.avg(UserProgress.completion_time))\
+        .filter(UserProgress.game_type == game_type)\
+        .scalar() or 0.0
+    
+    avg_lives = db.query(func.avg(UserProgress.lives_remaining))\
+        .filter(UserProgress.game_type == game_type)\
+        .scalar() or 0.0
+    
+    completed_games = db.query(func.count(UserProgress.id))\
+        .filter(UserProgress.game_type == game_type, UserProgress.completed == True)\
+        .scalar() or 0
+    
+    return GameStatsResponse(
+        total_players=total_players,
+        average_completion_time=round(avg_time, 2),
+        average_lives_remaining=round(avg_lives, 2),
+        total_games_played=total_games,
+        completion_rate=round((completed_games / total_games) * 100, 2) if total_games > 0 else 0.0
     )

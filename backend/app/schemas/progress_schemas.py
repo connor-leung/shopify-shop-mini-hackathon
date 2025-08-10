@@ -8,6 +8,7 @@ class ProgressCreate(BaseModel):
     score: Optional[int] = Field(default=0, ge=0)
     completed: bool = Field(default=True)
     lives_remaining: Optional[int] = Field(default=3, ge=0, le=5, description="Lives remaining after completion")
+    game_type: Optional[str] = Field(default="connections", description="Type of game played")
 
 class ProgressResponse(BaseModel):
     id: int
@@ -17,6 +18,7 @@ class ProgressResponse(BaseModel):
     score: int
     completed: bool
     lives_remaining: int
+    game_type: str
     created_at: datetime
     
     class Config:
