@@ -442,7 +442,7 @@ export default function ConnectionsGame({ onFinish }: ConnectionsGameProps) {
 
           {/* Categories Display */}
           {(solvedCategories.length > 0 || showingAnswers) && (
-            <div className="mb-6 space-y-4">
+            <div className="mb-6 space-y-2">
               {(showingAnswers ? categories : solvedCategories).map((cat) => {
                 const categoryItems = showingAnswers ? cat.items : cat.items;
                 
@@ -450,11 +450,11 @@ export default function ConnectionsGame({ onFinish }: ConnectionsGameProps) {
                 const colors = DIFFICULTY_COLORS[cat.difficulty.toLowerCase()] || DIFFICULTY_COLORS.easy
                 
                 return (
-                  <div key={cat.category} className="rounded-xl p-3 slide-down border-2" style={{
+                  <div key={cat.category} className="rounded-xl px-3 py-2 slide-down border-2" style={{
                     backgroundColor: colors.fill,
                     borderColor: colors.stroke
                   }}>
-                    <div className="text-center mb-2">
+                    <div className="text-center mb-1">
                       <h3 className="font-bold text-black text-sm uppercase tracking-wide">{cat.category}</h3>
                     </div>
                     <div className="flex gap-2 justify-center">
