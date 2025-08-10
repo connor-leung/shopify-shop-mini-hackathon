@@ -1,54 +1,106 @@
 #!/bin/bash
 
-echo "🎮 Starting Gaming Leaderboard Backend..."
+# Shop Mini Games Backend - Quick Start Script
 
-# Check if Ruby is installed
-if ! command -v ruby &> /dev/null; then
-    echo "❌ Ruby is not installed. Please install Ruby 3.2.0 or higher."
+set -e
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+echo -e "${GREEN}🎮 Shop Mini Games Backend${NC}"
+echo "================================"
+
+# Check if Docker is running
+if ! docker info > /dev/null 2>&1; then
+    echo -e "${RED}❌ Docker is not running. Please start Docker first.${NC}"
     exit 1
 fi
 
-# Check Ruby version
-RUBY_VERSION=$(ruby -v | cut -d' ' -f2 | cut -d'p' -f1)
-REQUIRED_VERSION="3.2.0"
+# Parse command line arguments
+MODE="dev"
+ACTION="up"
 
-if [ "$(printf '%s\n' "$REQUIRED_VERSION" "$RUBY_VERSION" | sort -V | head -n1)" != "$REQUIRED_VERSION" ]; then
-    echo "❌ Ruby version $RUBY_VERSION is too old. Please install Ruby $REQUIRED_VERSION or higher."
-    exit 1
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --prod|--production)
+            MODE="prod"
+            shift
+            ;;
+        --dev|--development)
+            MODE="dev"
+            shift
+            ;;
+        --down|--stop)
+            ACTION="down"
+            shift
+            ;;
+        --build)
+            ACTION="build"
+            shift
+            ;;
+        --logs)
+            ACTION="logs"
+            shift
+            ;;
+        -h|--help)
+            echo "Usage: $0 [OPTIONS]"
+            echo ""
+            echo "Options:"
+            echo "  --dev, --development    Run in development mode (default)"
+            echo "  --prod, --production    Run in production mode"
+            echo "  --down, --stop          Stop all services"
+            echo "  --build                 Build and start services"
+            echo "  --logs                  Show logs"
+            echo "  -h, --help              Show this help message"
+            echo ""
+            echo "Examples:"
+            echo "  $0                      # Start in development mode"
+            echo "  $0 --prod               # Start in production mode"
+            echo "  $0 --down               # Stop all services"
+            echo "  $0 --build              # Build and start"
+            exit 0
+            ;;
+        *)
+            echo -e "${RED}Unknown option: $1${NC}"
+            echo "Use --help for usage information"
+            exit 1
+            ;;
+    esac
+done
+
+# Set compose file based on mode
+if [ "$MODE" = "prod" ]; then
+    COMPOSE_FILE="docker-compose.yml"
+    echo -e "${YELLOW}🚀 Running in PRODUCTION mode${NC}"
+else
+    COMPOSE_FILE="docker-compose.dev.yml"
+    echo -e "${YELLOW}🔧 Running in DEVELOPMENT mode${NC}"
 fi
 
-echo "✅ Ruby $RUBY_VERSION detected"
-
-# Check if Bundler is installed
-if ! command -v bundle &> /dev/null; then
-    echo "📦 Installing Bundler..."
-    gem install bundler
-fi
-
-# Install dependencies
-echo "📦 Installing dependencies..."
-bundle install
-
-# Create database if it doesn't exist
-if [ ! -f "db/development.sqlite3" ]; then
-    echo "🗄️  Setting up gaming database..."
-    bundle exec rake db:create
-    bundle exec rake db:migrate
-    bundle exec rake db:seed
-    echo "✅ Gaming database setup complete!"
-    echo ""
-    echo "🏆 Sample mock leaderboard created with 10 players"
-    echo "📊 Sample users and scores added to database"
-fi
-
-# Start the server
-echo "🌐 Starting gaming leaderboard server on http://localhost:4567"
-echo "🎯 Available endpoints:"
-echo "   - /api/scores (submit scores)"
-echo "   - /api/leaderboard (view rankings)"
-echo "   - /api/compare-score (analyze performance)"
-echo ""
-echo "Press Ctrl+C to stop the server"
-echo ""
-
-bundle exec ruby app.rb
+# Execute the requested action
+case $ACTION in
+    "up")
+        echo -e "${GREEN}Starting services...${NC}"
+        docker-compose -f $COMPOSE_FILE up --build
+        ;;
+    "down")
+        echo -e "${YELLOW}Stopping services...${NC}"
+        docker-compose -f docker-compose.yml down
+        docker-compose -f docker-compose.dev.yml down
+        echo -e "${GREEN}✅ Services stopped${NC}"
+        ;;
+    "build")
+        echo -e "${GREEN}Building and starting services...${NC}"
+        docker-compose -f $COMPOSE_FILE up --build -d
+        echo -e "${GREEN}✅ Services started in background${NC}"
+        echo -e "${GREEN}📖 API Documentation: http://localhost:8000/docs${NC}"
+        echo -e "${GREEN}🔍 API Health Check: http://localhost:8000/health${NC}"
+        ;;
+    "logs")
+        echo -e "${GREEN}Showing logs...${NC}"
+        docker-compose -f $COMPOSE_FILE logs -f
+        ;;
+esac
