@@ -562,16 +562,16 @@ export default function ConnectionsGame({ onFinish }: ConnectionsGameProps) {
             </div>
           )}
           
-          {/* Mistakes Display with Lightning Icons - only show when not showing answers */}
+          {/* Lives Display with Lightning Icons - only show when not showing answers */}
           {!showingAnswers && (
             <div className="text-center">
-            <div className="flex justify-center space-x-1">
-              {Array.from({ length: lives }, (_, i) => (
-                <span key={i} className={`text-2xl ${i < mistakes ? 'text-gray-300' : 'text-black'}`}>
-                  ⚡
-                </span>
-              ))}
-            </div>
+              <div className="flex justify-center space-x-1">
+                {Array.from({ length: remainingLives }, (_, i) => (
+                  <span key={i} className="text-2xl text-black">
+                    ⚡
+                  </span>
+                ))}
+              </div>
             </div>
           )}
         </div>
