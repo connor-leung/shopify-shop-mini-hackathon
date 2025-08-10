@@ -1,6 +1,6 @@
 import { useProductSearch } from "@shopify/shop-minis-react";
 
-export const NUMBER_OF_ITEMS = 10;
+export const NUMBER_OF_ITEMS = 3;
 
 export interface ProductSearchOptions {
   category: string;
