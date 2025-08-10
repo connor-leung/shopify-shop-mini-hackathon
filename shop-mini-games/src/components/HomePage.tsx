@@ -1,57 +1,48 @@
 import { usePopularProducts, ProductCard } from "@shopify/shop-minis-react";
+import { Button } from "./Button";
 
 interface HomePageProps {
   onNavigate: (page: string) => void;
 }
 
 export function HomePage({ onNavigate }: HomePageProps) {
-  const { products } = usePopularProducts();
-
   return (
-    <div className="pt-12 px-4 pb-6">
-      <h1 className="text-2xl font-bold mb-2 text-center">
-        Welcome to Mini Mini Games!
-      </h1>
-
-      <div className="flex justify-center space-x-4 mb-6">
-        <button
-          onClick={() => onNavigate("home")}
-          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-        >
-          Home
-        </button>
-        <button
-          onClick={() => onNavigate("search")}
-          className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
-        >
-          Search Products
-        </button>
-        <button
-          onClick={() => onNavigate("demo")}
-          className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 transition-colors"
-        >
-          Question Demo
-        </button>
-
-        <button
-          onClick={() => onNavigate("connections-intro")}
-          className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
-        >
-          Play Connections
-        </button>
-
-        <button
-          onClick={() => onNavigate("mini-hunt")}
-          className="px-4 py-2 bg-indigo-500 text-white rounded hover:bg-indigo-600 transition-colors"
-        >
-          Mini Hunt
-        </button>
+    <div
+      className="min-h-screen pt-12 px-4 pb-6 flex flex-col items-center justify-center"
+      style={{ background: "linear-gradient(to bottom, #FAFAFA, #EEEAFF)" }}
+    >
+      <div className="flex justify-center mb-6 animate-[fadeInUp_1.2s_ease-out]">
+        <img
+          src="https://i.postimg.cc/wjTdTDJM/logo.png"
+          alt="logo"
+          className="max-w-1/2 h-auto"
+        />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {products?.map((product) => (
-          <ProductCard key={product.id} product={product} />
-        ))}
+      <h1 className="text-3xl font-bold mb-2 text-center animate-[fadeInUp_1.2s_ease-out_0.3s_both]">
+        Mini Link
+      </h1>
+      <span className="text-center text-gray-500 mb-6 w-3/4 animate-[fadeInUp_1.2s_ease-out_0.6s_both]">
+        {" "}
+        Group together Shop items by their hidden link!
+      </span>
+      <div className="flex flex-col space-y-3 mb-6 w-64">
+        <Button
+          onClick={() => onNavigate("connections-game")}
+          variant="primary"
+          size="medium"
+          className="w-full animate-[fadeInUp_1.2s_ease-out_1.2s_both]"
+        >
+          <span className="font-bold">Play Now</span>
+        </Button>
+        <Button
+          onClick={() => onNavigate("connections-intro")}
+          variant="outline"
+          size="medium"
+          className="w-full animate-[fadeInUp_1.2s_ease-out_1.5s_both]"
+        >
+          <span className="font-bold">How to Play</span>
+        </Button>
       </div>
     </div>
   );
