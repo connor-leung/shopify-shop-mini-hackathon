@@ -81,9 +81,9 @@ export default function ConnectionsGame({ onFinish }: ConnectionsGameProps) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center p-4">
+      <div className="min-h-screen flex items-center justify-center p-4" style={{background: 'linear-gradient(to bottom, #FAFAFA, #EEEAFF)'}}>
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 mx-auto mb-4" style={{borderColor: '#4F34E2'}}></div>
           <p className="text-gray-600 font-medium">Loading your game...</p>
         </div>
       </div>
@@ -92,7 +92,7 @@ export default function ConnectionsGame({ onFinish }: ConnectionsGameProps) {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center p-4">
+      <div className="min-h-screen flex items-center justify-center p-4" style={{background: 'linear-gradient(to bottom, #FAFAFA, #EEEAFF)'}}>
         <div className="text-center max-w-md">
           <div className="text-4xl mb-4">⚠️</div>
           <h3 className="text-lg font-semibold text-black mb-2">Game Error</h3>
@@ -248,20 +248,30 @@ export default function ConnectionsGame({ onFinish }: ConnectionsGameProps) {
         <div className="absolute inset-0 flex items-center justify-center p-1">
           {(() => {
             const imgUrl = item.product?.featuredImage?.url || item.product?.images?.[0]?.url
+            const productTitle = item.product?.title || 'Product'
+            
             if (imgUrl) {
               return (
-                <img 
-                  src={imgUrl} 
-                  alt={item.product?.title} 
-                  className="w-full h-full object-cover rounded-lg"
-                />
+                <div className="w-full h-full relative">
+                  {/* Image with consistent styling */}
+                  <img 
+                    src={imgUrl} 
+                    alt={productTitle} 
+                    className="w-full h-full object-cover rounded-lg brightness-90 contrast-110 saturate-75"
+                  />
+                  {/* Subtle gradient overlay for uniformity */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-transparent rounded-lg" />
+                </div>
               )
             }
-            // Fallback to text if no image
+            
+            // Enhanced fallback for items without images
             return (
-              <span className="text-xs font-medium text-center px-1 leading-tight text-gray-700">
-                {item.product?.title || 'Product'}
-              </span>
+              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg border border-gray-300">
+                <span className="text-xs font-medium text-center px-2 leading-tight text-gray-700">
+                  {productTitle}
+                </span>
+              </div>
             )
           })()}
         </div>
@@ -320,9 +330,23 @@ export default function ConnectionsGame({ onFinish }: ConnectionsGameProps) {
         .slide-down {
           animation: slideDown 0.5s ease-out;
         }
+        
+        .line-clamp-1 {
+          display: -webkit-box;
+          -webkit-line-clamp: 1;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+        
+        .line-clamp-2 {
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
       `}</style>
       
-      <div className="min-h-screen bg-white p-4">
+      <div className="min-h-screen p-4" style={{background: 'linear-gradient(to bottom, #FAFAFA, #EEEAFF)'}}>
         <div className="max-w-md mx-auto pt-8">
           {/* Game Title */}
           <div className="text-center mb-8">
@@ -344,22 +368,29 @@ export default function ConnectionsGame({ onFinish }: ConnectionsGameProps) {
                         key={item.id}
                         className="relative rounded-lg bg-gray-200 flex items-center justify-center aspect-square overflow-hidden w-full"
                       >
-                        <div className="absolute inset-0 flex items-center justify-center p-2">
+                        <div className="absolute inset-0 flex items-center justify-center p-1">
                           {(() => {
                             const imgUrl = item.product?.featuredImage?.url || item.product?.images?.[0]?.url
+                            const productTitle = item.product?.title || 'Product'
+                            
                             if (imgUrl) {
                               return (
-                                <img 
-                                  src={imgUrl} 
-                                  alt={item.product?.title} 
-                                  className="w-full h-full object-cover rounded-lg"
-                                />
+                                <div className="w-full h-full relative">
+                                  <img 
+                                    src={imgUrl} 
+                                    alt={productTitle} 
+                                    className="w-full h-full object-cover rounded-lg brightness-90 contrast-110 saturate-75"
+                                  />
+                                  <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-transparent rounded-lg" />
+                                </div>
                               )
                             }
                             return (
-                              <span className="text-xs font-medium text-center px-1 leading-tight text-gray-700">
-                                {item.product?.title || 'Product'}
-                              </span>
+                              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg border border-gray-300">
+                                <span className="text-xs font-medium text-center px-1 leading-tight text-gray-700">
+                                  {productTitle}
+                                </span>
+                              </div>
                             )
                           })()}
                         </div>
@@ -380,17 +411,28 @@ export default function ConnectionsGame({ onFinish }: ConnectionsGameProps) {
 
           {/* Action Buttons */}
           <div className="flex gap-3 mb-6">
-            <button className="flex-1 py-3 rounded-full border-2 border-purple-500 text-purple-500 font-semibold bg-white hover:bg-purple-50 transition-colors">
+            <button className="flex-1 py-3 rounded-full border-2 font-semibold bg-white transition-colors" style={{borderColor: '#4F34E2', color: '#4F34E2'}} onMouseEnter={(e) => e.target.style.backgroundColor = '#F8F6FF'} onMouseLeave={(e) => e.target.style.backgroundColor = 'white'}>
               Hint
             </button>
             <button
               className={`flex-1 py-3 rounded-full font-semibold transition-all duration-200 ${
                 selectedIds.length === 4 && !gameOver && !isAnimating
-                  ? 'bg-purple-500 text-white hover:bg-purple-600'
+                  ? 'text-white'
                   : 'bg-gray-300 text-gray-500 cursor-not-allowed'
               }`}
+              style={selectedIds.length === 4 && !gameOver && !isAnimating ? {backgroundColor: '#4F34E2'} : {}}
               disabled={selectedIds.length !== 4 || gameOver || isAnimating}
               onClick={submitGuess}
+              onMouseEnter={(e) => {
+                if (selectedIds.length === 4 && !gameOver && !isAnimating) {
+                  e.target.style.backgroundColor = '#3D26B8'
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (selectedIds.length === 4 && !gameOver && !isAnimating) {
+                  e.target.style.backgroundColor = '#4F34E2'
+                }
+              }}
             >
               {gameOver ? 'Game Over' : 
                isAnimating ? 'Processing...' :
