@@ -1,4 +1,5 @@
 import { useProductSearch } from "@shopify/shop-minis-react";
+import { useMemo } from "react";
 import { easy, medium, hard, expert } from "../questions/questions";
 
 export type Difficulty = "Easy" | "Medium" | "Hard" | "Expert";
@@ -45,8 +46,8 @@ export function useGenerateQuestion(difficulty: Difficulty) {
       throw new Error(`Invalid difficulty: ${difficulty}`);
   }
 
-  // Get random question object
-  const randomQuestion = getRandomItem(questionPool);
+  // Pick a random question only once per component lifecycle to avoid re-randomizing on every render
+  const randomQuestion = useMemo(() => getRandomItem(questionPool), []);
   const category = Object.keys(randomQuestion)[0];
   const searchTerms = randomQuestion[category];
 
@@ -56,11 +57,36 @@ export function useGenerateQuestion(difficulty: Difficulty) {
     first: 50, // Get more results to have better random selection
   });
 
-  // Process the products to match the question format
-  const items = products ? products.slice(0, searchTerms.length).map((product, index) => ({
-    id: product.id,
-    product: product
-  })) : [];
+  // Build an array with at most one unique product for each search term
+  const items: Array<{ id: string; product: any }> = [];
+  if (products && products.length > 0) {
+    const usedIds = new Set<string>();
+
+    searchTerms.forEach((term: string) => {
+      const lower = term.toLowerCase();
+      const match = products.find((p: any) => {
+        const title = p.title?.toLowerCase() || "";
+        const type = p.productType?.toLowerCase() || "";
+        return !usedIds.has(p.id) && (title.includes(lower) || type.includes(lower));
+      });
+
+      if (match) {
+        items.push({ id: match.id, product: match });
+        usedIds.add(match.id);
+      }
+    });
+
+    // Fallback: if we couldn't find enough matches, fill with random uniques
+    if (items.length < searchTerms.length) {
+      products.some((p: any) => {
+        if (!usedIds.has(p.id)) {
+          items.push({ id: p.id, product: p });
+          usedIds.add(p.id);
+        }
+        return items.length === searchTerms.length;
+      });
+    }
+  }
 
   return {
     difficulty,
@@ -100,7 +126,7 @@ export function useGenerateQuestionWithMultipleSearches(difficulty: Difficulty) 
       throw new Error(`Invalid difficulty: ${difficulty}`);
   }
 
-  const randomQuestion = getRandomItem(questionPool);
+  const randomQuestion = useMemo(() => getRandomItem(questionPool), []);
   const category = Object.keys(randomQuestion)[0];
   const searchTerms = randomQuestion[category];
 

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { useGenerateGameData, GameCategory } from '../utils/useGenerateGameData'
+import { useGenerateGameData } from '../utils/useGenerateGameData'
 
 interface ConnectionsGameProps {
   onFinish: (results: GameResults) => void
@@ -40,11 +40,12 @@ export default function ConnectionsGame({ onFinish, onQuit }: ConnectionsGamePro
     )
   }, [loading, error, categories])
 
-  // Shuffle items once they are ready
+  // State for items shown in grid
   const [shuffledItems, setShuffledItems] = useState<typeof allItems>([])
+
+  // Shuffle items once when they first load to avoid endless re-shuffling
   useEffect(() => {
-    if (allItems.length === 16) {
-      // Fisher-Yates shuffle
+    if (allItems.length === 16 && shuffledItems.length === 0) {
       const arr = [...allItems]
       for (let i = arr.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1))
@@ -52,9 +53,9 @@ export default function ConnectionsGame({ onFinish, onQuit }: ConnectionsGamePro
       }
       setShuffledItems(arr)
     }
-  }, [allItems])
+  }, [allItems, shuffledItems.length])
 
-  // Game state
+  // Gameplay state
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [solvedCategoryKeys, setSolvedCategoryKeys] = useState<string[]>([])
   const [mistakes, setMistakes] = useState(0)
@@ -137,7 +138,7 @@ export default function ConnectionsGame({ onFinish, onQuit }: ConnectionsGamePro
   const renderItem = (item: typeof allItems[0]) => {
     const status = getItemStatus(item.id)
     const difficultyColor = DIFFICULTY_COLORS[item.difficulty]
-    const baseClasses = 'border rounded p-2 text-sm cursor-pointer select-none transition-colors text-center'
+    const baseClasses = 'border rounded p-1 cursor-pointer select-none transition-colors flex items-center justify-center aspect-square overflow-hidden'
     const statusClasses =
       status === 'selected'
         ? 'bg-blue-200 border-blue-400'
@@ -153,7 +154,14 @@ export default function ConnectionsGame({ onFinish, onQuit }: ConnectionsGamePro
         className={`${baseClasses} ${statusClasses} ${disabled ? 'opacity-60' : ''}`}
         onClick={() => (disabled ? null : toggleSelect(item.id))}
       >
-        {item.product?.title || 'Product'}
+        {(() => {
+          const imgUrl = item.product?.featuredImage?.url || item.product?.images?.[0]?.url
+          if (imgUrl) {
+            return <img src={imgUrl} alt={item.product?.title} className="w-full h-full object-cover" />
+          }
+          // Fallback to text if no image
+          return <span className="text-sm text-gray-700">{item.product?.title || 'Product'}</span>
+        })()}
       </div>
     )
   }
