@@ -6,8 +6,6 @@ interface HomePageProps {
 }
 
 export function HomePage({ onNavigate }: HomePageProps) {
-  const { products } = usePopularProducts();
-
   return (
     <div
       className="min-h-screen pt-12 px-4 pb-6 flex flex-col items-center justify-center"
@@ -28,13 +26,22 @@ export function HomePage({ onNavigate }: HomePageProps) {
         {" "}
         Group together Shop items by their hidden link!
       </span>
-      <div className="flex justify-center space-x-4 mb-6 animate-[fadeInUp_1.2s_ease-out_0.9s_both]">
+      <div className="flex flex-col space-y-3 mb-6 w-64">
         <Button
-          onClick={() => onNavigate("connections")}
+          onClick={() => onNavigate("connections-game")}
           variant="primary"
-          size="large"
+          size="medium"
+          className="w-full animate-[fadeInUp_1.2s_ease-out_1.2s_both]"
         >
-          Play Now
+          <span className="font-bold">Play Now</span>
+        </Button>
+        <Button
+          onClick={() => onNavigate("connections-intro")}
+          variant="outline"
+          size="medium"
+          className="w-full animate-[fadeInUp_1.2s_ease-out_1.5s_both]"
+        >
+          <span className="font-bold">How to Play</span>
         </Button>
       </div>
     </div>
