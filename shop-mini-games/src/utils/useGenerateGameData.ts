@@ -1,4 +1,4 @@
-import { useGenerateQuestion, Difficulty } from './generateQuestions'
+import { useGenerateQuestionWithMultipleSearches, Difficulty } from './generateQuestions'
 
 export interface GameCategory {
   difficulty: Difficulty
@@ -14,10 +14,10 @@ export interface UseGenerateGameDataResult {
 
 // Generates one question for each difficulty level. Useful for the Connections game.
 export function useGenerateGameData(): UseGenerateGameDataResult {
-  const easy = useGenerateQuestion('Easy')
-  const medium = useGenerateQuestion('Medium')
-  const hard = useGenerateQuestion('Hard')
-  const expert = useGenerateQuestion('Expert')
+  const easy = useGenerateQuestionWithMultipleSearches('Easy')
+  const medium = useGenerateQuestionWithMultipleSearches('Medium')
+  const hard = useGenerateQuestionWithMultipleSearches('Hard')
+  const expert = useGenerateQuestionWithMultipleSearches('Expert')
 
   const loading = easy.loading || medium.loading || hard.loading || expert.loading
   // Prefer the first truthy error
