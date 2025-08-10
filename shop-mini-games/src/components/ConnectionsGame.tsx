@@ -13,6 +13,11 @@ export interface GameResults {
     category: string;
     items: Array<{ id: string; product: any }>;
   }[];
+  allCategories: {
+    difficulty: string;
+    category: string;
+    items: Array<{ id: string; product: any }>;
+  }[];
   mistakes: number;
   elapsedSeconds: number;
   totalGuesses: number;
@@ -93,6 +98,11 @@ export default function ConnectionsGame({
     onFinish({
       won,
       solvedCategories: solvedCategories.map((c) => ({
+        difficulty: c.difficulty,
+        category: c.category,
+        items: c.items,
+      })),
+      allCategories: categories.map((c) => ({
         difficulty: c.difficulty,
         category: c.category,
         items: c.items,
