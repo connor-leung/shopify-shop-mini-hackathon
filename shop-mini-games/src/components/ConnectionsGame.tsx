@@ -467,11 +467,7 @@ export default function ConnectionsGame({
           {/* Game Title */}
           <div className="text-center mb-8">
             <h1 className="text-2xl font-bold text-black mb-2">
-              {showingAnswers
-                ? won
-                  ? "Nice Work!"
-                  : "You ran out of tries."
-                : "Can you find any links?"}
+              {showingAnswers ? (won ? 'Nice Work!' : 'Nice try!') : 'Can you find any links?'}
             </h1>
             {!showingAnswers && (
               <p className="text-gray-500 text-base">
@@ -638,17 +634,15 @@ export default function ConnectionsGame({
               </button>
             </div>
           )}
-
-          {/* Lives Display with Lightning Icons - only show when not showing answers */}
+          
+          {/* Lives Display with Custom Lightning Icons - only show when not showing answers */}
           {!showingAnswers && (
             <div className="text-center">
-              <div className="flex justify-center space-x-1">
-                {Array.from({ length: remainingLives }, (_, i) => (
-                  <span key={i} className="text-2xl text-black">
-                    ⚡
-                  </span>
-                ))}
-              </div>
+              <img 
+                src={`https://i.postimg.cc/${remainingLives === 0 ? 'CB3vzsr5/Property-1-0' : remainingLives === 1 ? '3k1bnpNf/Property-1-1' : remainingLives === 2 ? '06HXqspp/Property-1-2' : remainingLives === 3 ? 'FddWrBZw/Property-1-3' : '94fgSMqm/Property-1-4'}.png`}
+                alt={`${remainingLives} lives remaining`}
+                className="h-6 w-auto mx-auto"
+              />
             </div>
           )}
         </div>
