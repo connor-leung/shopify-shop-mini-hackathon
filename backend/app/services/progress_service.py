@@ -92,12 +92,18 @@ class ProgressService:
             .first()
         
         if not user_stats:
-            user_stats = UserStats(user_id=user_id)
+            user_stats = UserStats(
+                user_id=user_id,
+                total_games_played=0,
+                total_score=0,
+                current_streak=0,
+                longest_streak=0
+            )
             self.db.add(user_stats)
         
-        # Update basic stats
-        user_stats.total_games_played += 1
-        user_stats.total_score += progress_data.score
+        # Update basic stats - ensure values are not None
+        user_stats.total_games_played = (user_stats.total_games_played or 0) + 1
+        user_stats.total_score = (user_stats.total_score or 0) + progress_data.score
         user_stats.last_played = datetime.utcnow()
         
         # Update best time
@@ -139,13 +145,15 @@ class ProgressService:
         
         if today_progress_count == 1:  # First game today
             if yesterday_progress:
-                user_stats.current_streak += 1
+                user_stats.current_streak = (user_stats.current_streak or 0) + 1
             else:
                 user_stats.current_streak = 1
         
         # Update longest streak
-        if user_stats.current_streak > user_stats.longest_streak:
-            user_stats.longest_streak = user_stats.current_streak
+        current = user_stats.current_streak or 0
+        longest = user_stats.longest_streak or 0
+        if current > longest:
+            user_stats.longest_streak = current
     
     def get_game_stats(self):
         """Get overall game statistics"""

@@ -144,8 +144,9 @@ async def get_mock_leaderboard(
         entries=entries,
         your_rank=leaderboard_data["your_rank"],
         total_players=leaderboard_data["total_players"]
-    )@rou
-ter.get("/game-stats/{game_type}", response_model=GameStatsResponse)
+    )
+
+@router.get("/game-stats/{game_type}", response_model=GameStatsResponse)
 async def get_game_type_stats(
     game_type: str,
     db: Session = Depends(get_db)

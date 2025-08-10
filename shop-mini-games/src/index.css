@@ -1,5 +1,58 @@
 @import "@shopify/shop-minis-react/styles";
 
+@keyframes confettiFall {
+  0% {
+    transform: translateY(-100px) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(calc(100vh + 100px)) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+.animate-confetti {
+  animation: confettiFall linear infinite;
+}
+
+@keyframes rainFall {
+  0% {
+    transform: translateY(-100px);
+    opacity: 0.7;
+  }
+  100% {
+    transform: translateY(calc(100vh + 100px));
+    opacity: 0;
+  }
+}
+
+.animate-rain {
+  animation: rainFall linear infinite;
+}
+
+@keyframes darkOverlayFade {
+  0% {
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.6;
+  }
+  90% {
+    opacity: 0.6;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.dark-overlay {
+  animation: darkOverlayFade 8s ease-in-out forwards;
+}
+
+.gloomy-background {
+  background: linear-gradient(to bottom, #2c3e50, #34495e, #4a5568) !important;
+}
+
 @keyframes fadeInUp {
   from {
     opacity: 0;

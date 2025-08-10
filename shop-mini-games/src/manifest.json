@@ -1,6 +1,7 @@
 {
   "name": "shop-mini-games",
   "permissions": [],
+  "trusted_domains": ["localhost"],
   "privacy_policy_url": "https://example.com/privacy",
   "terms_url": "https://example.com/terms"
 }
