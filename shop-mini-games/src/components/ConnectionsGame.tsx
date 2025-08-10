@@ -346,7 +346,7 @@ export default function ConnectionsGame({ onFinish }: ConnectionsGameProps) {
         }
       `}</style>
       
-      <div className="min-h-screen p-4" style={{background: 'linear-gradient(to bottom, #FAFAFA, #EEEAFF)'}}>
+      <div className="min-h-screen p-4" style={{background: 'linear-gradient(to bottom, #FAFAFA,rgb(233, 228, 255))'}}>
         <div className="max-w-md mx-auto pt-8">
           {/* Game Title */}
           <div className="text-center mb-8">
