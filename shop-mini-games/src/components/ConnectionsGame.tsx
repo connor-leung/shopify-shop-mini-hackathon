@@ -442,7 +442,7 @@ export default function ConnectionsGame({ onFinish }: ConnectionsGameProps) {
 
           {/* Categories Display */}
           {(solvedCategories.length > 0 || showingAnswers) && (
-            <div className="mb-6 space-y-2">
+            <div className="mb-2 space-y-2">
               {(showingAnswers ? categories : solvedCategories).map((cat) => {
                 const categoryItems = showingAnswers ? cat.items : cat.items;
                 
