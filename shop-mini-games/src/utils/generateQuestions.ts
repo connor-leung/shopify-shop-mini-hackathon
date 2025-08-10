@@ -57,36 +57,11 @@ export function useGenerateQuestion(difficulty: Difficulty) {
     first: 50, // Get more results to have better random selection
   });
 
-  // Build an array with at most one unique product for each search term
-  const items: Array<{ id: string; product: any }> = [];
-  if (products && products.length > 0) {
-    const usedIds = new Set<string>();
-
-    searchTerms.forEach((term: string) => {
-      const lower = term.toLowerCase();
-      const match = products.find((p: any) => {
-        const title = p.title?.toLowerCase() || "";
-        const type = p.productType?.toLowerCase() || "";
-        return !usedIds.has(p.id) && (title.includes(lower) || type.includes(lower));
-      });
-
-      if (match) {
-        items.push({ id: match.id, product: match });
-        usedIds.add(match.id);
-      }
-    });
-
-    // Fallback: if we couldn't find enough matches, fill with random uniques
-    if (items.length < searchTerms.length) {
-      products.some((p: any) => {
-        if (!usedIds.has(p.id)) {
-          items.push({ id: p.id, product: p });
-          usedIds.add(p.id);
-        }
-        return items.length === searchTerms.length;
-      });
-    }
-  }
+  // Process the products to match the question format
+  const items = products ? products.slice(0, searchTerms.length).map((product, index) => ({
+    id: product.id,
+    product: product
+  })) : [];
 
   return {
     difficulty,
@@ -107,47 +82,56 @@ export function useGenerateRandomQuestion() {
 
 // Enhanced hook that searches for multiple products using different search terms
 export function useGenerateQuestionWithMultipleSearches(difficulty: Difficulty) {
+  // Select the appropriate difficulty pool
   let questionPool: any[];
-  
   switch (difficulty) {
-    case "Easy":
+    case 'Easy':
       questionPool = easy;
       break;
-    case "Medium":
+    case 'Medium':
       questionPool = medium;
       break;
-    case "Hard":
+    case 'Hard':
       questionPool = hard;
       break;
-    case "Expert":
+    case 'Expert':
       questionPool = expert;
       break;
     default:
       throw new Error(`Invalid difficulty: ${difficulty}`);
   }
 
+  // Memoize chosen question so hooks count stays stable
   const randomQuestion = useMemo(() => getRandomItem(questionPool), []);
   const category = Object.keys(randomQuestion)[0];
-  const searchTerms = randomQuestion[category];
+  const searchTerms: string[] = randomQuestion[category];
 
-  // Search for products using the first search term to get a pool of products
-  const { products, loading, error } = useProductSearch({
-    query: searchTerms[0],
-    first: 100, // Get more results to have better selection
+  // For each search term perform its own product search
+  const results = searchTerms.map((term) =>
+    useProductSearch({ query: term, first: 20 })
+  );
+
+  const loading = results.some((r) => r.loading);
+  const error = results.find((r) => r.error)?.error || null;
+
+  const items: Array<{ id: string; product: any }> = [];
+  results.forEach((r) => {
+    const product = r.products?.[0];
+    if (product) {
+      items.push({ id: product.id, product });
+    }
   });
 
-  // Create items array with products that match the search terms
-  const items = [];
-  if (products && products.length > 0) {
-    // For each search term, try to find a product that matches
-    for (let i = 0; i < searchTerms.length && i < products.length; i++) {
-      const product = products[i];
-      if (product) {
-        items.push({
-          id: product.id,
-          product: product
-        });
-      }
+  // If we don't have enough products, fill with random ones from the first successful search
+  if (items.length < searchTerms.length) {
+    const firstSuccessfulResult = results.find(r => r.products && r.products.length > 0);
+    if (firstSuccessfulResult) {
+      const usedIds = new Set(items.map(item => item.id));
+      firstSuccessfulResult.products?.forEach(product => {
+        if (items.length < searchTerms.length && !usedIds.has(product.id)) {
+          items.push({ id: product.id, product });
+        }
+      });
     }
   }
 
@@ -157,7 +141,7 @@ export function useGenerateQuestionWithMultipleSearches(difficulty: Difficulty) 
     items,
     loading,
     error,
-    searchTerms
+    searchTerms,
   };
 }
 

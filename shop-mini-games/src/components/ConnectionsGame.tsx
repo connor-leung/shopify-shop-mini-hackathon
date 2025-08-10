@@ -40,6 +40,7 @@ export default function ConnectionsGame({ onFinish, onQuit }: ConnectionsGamePro
     )
   }, [loading, error, categories])
 
+
   // State for items shown in grid
   const [shuffledItems, setShuffledItems] = useState<typeof allItems>([])
 
@@ -138,7 +139,7 @@ export default function ConnectionsGame({ onFinish, onQuit }: ConnectionsGamePro
   const renderItem = (item: typeof allItems[0]) => {
     const status = getItemStatus(item.id)
     const difficultyColor = DIFFICULTY_COLORS[item.difficulty]
-    const baseClasses = 'border rounded p-1 cursor-pointer select-none transition-colors flex items-center justify-center aspect-square overflow-hidden'
+    const baseClasses = 'border rounded p-1 cursor-pointer select-none transition-colors flex items-center justify-center aspect-square overflow-hidden w-full'
     const statusClasses =
       status === 'selected'
         ? 'bg-blue-200 border-blue-400'
@@ -160,7 +161,7 @@ export default function ConnectionsGame({ onFinish, onQuit }: ConnectionsGamePro
             return <img src={imgUrl} alt={item.product?.title} className="w-full h-full object-cover" />
           }
           // Fallback to text if no image
-          return <span className="text-sm text-gray-700">{item.product?.title || 'Product'}</span>
+          return <span className="text-sm text-gray-700 w-full text-center px-1">{item.product?.title || 'Product'}</span>
         })()}
       </div>
     )
@@ -195,6 +196,15 @@ export default function ConnectionsGame({ onFinish, onQuit }: ConnectionsGamePro
       {/* Info */}
       <div className="text-center text-sm text-gray-600">
         {solvedCategoryKeys.length}/4 groups solved • {mistakes} mistakes
+      </div>
+
+      {/* Debug / Info – show categories from generateQuestions */}
+      <div className="mt-6 text-xs text-gray-500 space-y-1">
+        {categories.map((cat) => (
+          <div key={cat.difficulty}>
+            <span className="font-semibold">{cat.difficulty}:</span> {cat.category} – {cat.items.map((it) => `${it.product?.title} (${it.product?.id})`).join(', ')}
+          </div>
+        ))}
       </div>
     </div>
   )
