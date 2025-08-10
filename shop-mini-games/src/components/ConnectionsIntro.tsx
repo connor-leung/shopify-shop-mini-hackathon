@@ -1,48 +1,47 @@
-import React from 'react'
+import React from "react";
+import { Button } from "./Button";
 
 interface ConnectionsIntroProps {
-  onStart: () => void
-  onBack?: () => void
+  onStart: () => void;
+  onBack?: () => void;
 }
 
 // Intro / how-to-play screen for the Shopify Connections game
-export default function ConnectionsIntro({ onStart, onBack }: ConnectionsIntroProps) {
+export default function ConnectionsIntro({
+  onStart,
+  onBack,
+}: ConnectionsIntroProps) {
   return (
-    <div className="pt-12 px-4 pb-8 max-w-xl mx-auto text-center">
-      <h1 className="text-3xl font-extrabold mb-4">Shopify Connections</h1>
+    <div
+      className="min-h-screen w-full flex items-center justify-center"
+      style={{ background: "linear-gradient(to bottom, #FAFAFA, #EEEAFF)" }}
+    >
+      <div className="px-4 py-8 max-w-xl mx-auto text-center">
+        <h1 className="text-3xl font-extrabold mb-4">How to Play Mini Link</h1>
 
-      <p className="mb-4 text-gray-700 leading-relaxed">
-        Match the products into <strong>4 groups</strong> of 4 based on a hidden
-        category. Each group has a difficulty – Easy, Medium, Hard, and Expert.
-        You have <strong>4 lives</strong>. A wrong guess costs a life. Solve all
-        groups before you run out of lives!
-      </p>
+        <p className="mb-4 text-gray-700 leading-relaxed">
+          The goal of this game is figure out groups of items that have a shared
+          commonality. Select four items at a time and press Submit to make a
+          guess.
+        </p>
 
-      <ol className="text-left list-decimal list-inside space-y-1 mb-6 text-gray-700">
-        <li>Select up to 4 items you think belong together.</li>
-        <li>Tap <span className="font-semibold">Submit</span> to check.</li>
-        <li>
-          If correct, the group is locked in and its colour (green, yellow, orange,
-          red) shows its difficulty.
-        </li>
-        <li>Use the clues – remaining items and difficulties – to find the rest.</li>
-      </ol>
+        <p className="mb-6 text-gray-700 leading-relaxed">
+          The game will end if you make 4 incorrect guesses. Press Hint to see
+          3/4 items that share a commonality to deduce the fourth item from that
+          group.
+        </p>
 
-      <button
-        className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors w-full mb-3"
-        onClick={onStart}
-      >
-        Start Game
-      </button>
-
-      {onBack && (
-        <button
-          className="px-4 py-2 text-sm text-blue-600 underline"
-          onClick={onBack}
-        >
-          Back
-        </button>
-      )}
+        <div className="space-y-3">
+          <Button
+            onClick={onStart}
+            variant="primary"
+            size="medium"
+            className="w-full"
+          >
+            Start Game
+          </Button>
+        </div>
+      </div>
     </div>
-  )
+  );
 }

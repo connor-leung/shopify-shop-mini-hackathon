@@ -18,6 +18,12 @@ export interface GameResults {
   solvedCategories: {
     difficulty: string
     category: string
+    items: Array<{ id: string; product: any }>
+  }[]
+  allCategories: {
+    difficulty: string
+    category: string
+    items: Array<{ id: string; product: any }>
   }[]
   mistakes: number
   elapsedSeconds: number
@@ -92,7 +98,16 @@ export default function ConnectionsGame({ onFinish }: ConnectionsGameProps) {
     const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000)
     onFinish({
       won,
-      solvedCategories: solvedCategories.map((c) => ({ difficulty: c.difficulty, category: c.category })),
+      solvedCategories: solvedCategories.map((c) => ({
+        difficulty: c.difficulty,
+        category: c.category,
+        items: c.items,
+      })),
+      allCategories: categories.map((c) => ({
+        difficulty: c.difficulty,
+        category: c.category,
+        items: c.items,
+      })),
       mistakes,
       elapsedSeconds,
       totalGuesses,
@@ -430,8 +445,8 @@ export default function ConnectionsGame({ onFinish }: ConnectionsGameProps) {
         }
       `}</style>
       
-      <div className="min-h-screen p-4" style={{background: 'linear-gradient(to bottom, #FAFAFA,rgb(233, 228, 255))'}}>
-        <div className="max-w-md mx-auto pt-8">
+             <div className="min-h-screen p-4 flex items-center justify-center" style={{background: 'linear-gradient(to bottom, #FAFAFA,rgb(233, 228, 255))'}}>
+         <div className="max-w-md w-full">
           {/* Game Title */}
           <div className="text-center mb-8">
             <h1 className="text-2xl font-bold text-black mb-2">
