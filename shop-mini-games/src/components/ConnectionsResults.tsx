@@ -69,8 +69,7 @@ export default function ConnectionsResults({
     results
   );
 
-  const { mistakes, elapsedSeconds, totalGuesses, solvedCategories } = results;
-  const won = true; // Use the actual won result from the game
+  const { won, mistakes, elapsedSeconds, totalGuesses, solvedCategories } = results;
   const [userStats, setUserStats] = useState<UserStats | null>(null);
   const [gameStats, setGameStats] = useState<GameStats | null>(null);
   const [leaderboard, setLeaderboard] = useState<LeaderboardResponse | null>(
@@ -273,8 +272,22 @@ export default function ConnectionsResults({
     >
       <Confetti show={showConfetti} />
       <div className="pt-12 px-4 pb-8 max-w-xl mx-auto text-center">
-        <h1 className="text-3xl font-bold mb-4">
-          {won ? "On fire! 🎉" : "Better luck next time ☔"}
+        <h1 className="mb-4">
+          {won ? (
+            <div className="flex flex-col">
+              <span className="text-3xl font-bold pb-2">On fire! 🎉</span>
+              <span>
+                Today's avg:{" "}
+                {gameStats?.average_completion_time
+                  ? `${Math.round(gameStats.average_completion_time)}s`
+                  : "Loading..."}
+              </span>
+            </div>
+          ) : (
+            <>
+              <span className="text-3xl">Better luck next time ☔</span>
+            </>
+          )}
         </h1>
 
         {/* Error message */}
@@ -361,11 +374,10 @@ export default function ConnectionsResults({
                   >
                     {/* Streaks Component - NEW FIRST COMPONENT */}
                     <div className="bg-white rounded-lg p-6 border aspect-square flex flex-col justify-center w-[240px] h-[240px] mx-5 flex-shrink-0 shadow-sm">
-                      <p className="text-sm text-gray-600 mb-2">
-                        Current Streak
-                      </p>
-                      <p className="text-3xl font-bold text-gray-900">
-                        {userStats?.current_streak || 0}
+                      <span className="text-5xl pb-4">🔥</span>
+                      <p className="text-2xl font-bold mb-2">Current Streak</p>
+                      <p className="text-xl font-bold text-gray-900">
+                        {`${userStats?.current_streak || 0}  -day streak`}
                       </p>
                       {userStats &&
                         gameStats &&
@@ -570,36 +582,6 @@ export default function ConnectionsResults({
         >
           View Game Items
         </button>
-
-        {/* Test Confetti Button */}
-        {/* <button
-          onClick={() => {
-            console.log("🎉 ConnectionsResults: Test Confetti button clicked");
-            setShowConfetti(true);
-            // Hide confetti after 4 seconds
-            setTimeout(() => {
-              setShowConfetti(false);
-            }, 4000);
-          }}
-          className="w-full mb-2 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600"
-        >
-          🎉 Test Confetti
-        </button> */}
-
-        {/* Test Rain Button */}
-        {/* <button
-          onClick={() => {
-            console.log("☔ ConnectionsResults: Test Rain button clicked");
-            setShowRain(true);
-            // Hide rain after 8 seconds
-            setTimeout(() => {
-              setShowRain(false);
-            }, 5000);
-          }}
-          className="w-full mb-2 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
-        >
-          ☔ Test Rain
-        </button> */}
 
         {onBackHome && (
           <button
