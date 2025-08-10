@@ -7,7 +7,11 @@ import {
   Difficulty 
 } from '../utils/generateQuestions';
 
-const QuestionDemo: React.FC = () => {
+interface QuestionDemoProps {
+  onNavigate: (page: string) => void
+}
+
+const QuestionDemo: React.FC<QuestionDemoProps> = ({ onNavigate }) => {
   const [refreshKey, setRefreshKey] = useState(0);
 
   const handleRefresh = () => {
@@ -19,6 +23,16 @@ const QuestionDemo: React.FC = () => {
       <h1 className="text-3xl font-bold text-center mb-8 text-blue-600">
         Question Generation Demo
       </h1>
+      
+      {/* Navigation */}
+      <div className="flex justify-center mb-6">
+        <button 
+          onClick={() => onNavigate('home')}
+          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+        >
+          ← Back to Home
+        </button>
+      </div>
       
       {/* Refresh Button */}
       <div className="mb-8 p-4 bg-gray-50 rounded-lg text-center">

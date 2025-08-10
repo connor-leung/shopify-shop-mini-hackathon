@@ -6,9 +6,12 @@ import {
   getCategoryInfo,
 } from "../utils/productSearch";
 import ProductCard from "../components/ProductCard";
-import { Link } from "react-router-dom";
 
-export function SearchPage() {
+interface SearchPageProps {
+  onNavigate: (page: string) => void
+}
+
+export function SearchPage({ onNavigate }: SearchPageProps) {
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [customLimit, setCustomLimit] = useState(20);
   const [isSearching, setIsSearching] = useState(false);
@@ -78,18 +81,18 @@ export function SearchPage() {
       
       {/* Navigation */}
       <div className="flex justify-center space-x-4 mb-6">
-        <Link 
-          to="/" 
+        <button 
+          onClick={() => onNavigate('home')}
           className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
         >
           Home
-        </Link>
-        <Link 
-          to="/search" 
+        </button>
+        <button 
+          onClick={() => onNavigate('search')}
           className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
         >
           Search Products
-        </Link>
+        </button>
       </div>
 
       {/* Category Search Section */}

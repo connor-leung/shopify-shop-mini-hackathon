@@ -1,7 +1,10 @@
 import { usePopularProducts, ProductCard } from '@shopify/shop-minis-react'
-import { Link } from 'react-router-dom'
 
-export function HomePage() {
+interface HomePageProps {
+  onNavigate: (page: string) => void
+}
+
+export function HomePage({ onNavigate }: HomePageProps) {
   const { products } = usePopularProducts()
 
   return (
@@ -11,24 +14,24 @@ export function HomePage() {
       </h1>
       
       <div className="flex justify-center space-x-4 mb-6">
-        <Link 
-          to="/" 
+        <button 
+          onClick={() => onNavigate('home')}
           className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
         >
           Home
-        </Link>
-        <Link 
-          to="/search" 
+        </button>
+        <button 
+          onClick={() => onNavigate('search')}
           className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
         >
           Search Products
-        </Link>
-        <Link 
-          to="/demo" 
+        </button>
+        <button 
+          onClick={() => onNavigate('demo')}
           className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 transition-colors"
         >
           Question Demo
-        </Link>
+        </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
