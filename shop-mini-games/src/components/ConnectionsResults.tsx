@@ -20,6 +20,14 @@ interface ConnectionsResultsProps {
   onBackHome?: () => void;
 }
 
+interface CarouselItem {
+  label: string;
+  value?: string;
+  isImage?: boolean;
+  imageUrl?: string;
+  linkUrl?: string;
+}
+
 export default function ConnectionsResults({
   results,
   onPlayAgain,
@@ -112,11 +120,18 @@ export default function ConnectionsResults({
   const lifetime = loadStats();
 
   // Carousel data
-  const carouselItems = [
+  const carouselItems: CarouselItem[] = [
     { label: "Time", value: `${elapsedSeconds}s` },
     { label: "Mistakes", value: mistakes.toString() },
     { label: "Guesses", value: totalGuesses.toString() },
     { label: "Categories", value: solvedCategories.length.toString() },
+    {
+      label: "Results",
+      value: undefined,
+      isImage: true,
+      imageUrl: "https://i.postimg.cc/x8dX3wHV/image.png",
+      linkUrl: "https://postimages.org/",
+    },
   ];
 
   // Navigation functions
@@ -167,15 +182,9 @@ export default function ConnectionsResults({
     return () => clearInterval(interval);
   }, [touchStart]);
 
-  // Scroll to current item
+  // Scroll to current item - not needed since we're using transform
   useEffect(() => {
-    if (carouselRef.current) {
-      const itemWidth = 248; // 240px + 8px gap
-      carouselRef.current.scrollTo({
-        left: currentIndex * itemWidth,
-        behavior: "smooth",
-      });
-    }
+    // Transform handles positioning, no need for scroll
   }, [currentIndex]);
 
   console.log("🎨 ConnectionsResults: Rendering component with state:", {
@@ -255,53 +264,93 @@ export default function ConnectionsResults({
         </div>
       )}
 
-      <div className="bg-gray-50 rounded-lg p-6 mb-6 text-center max-w-full mx-auto relative">
-        {/* Swipe Instructions */}
-        <div className="text-xs text-gray-500 mb-2">Swipe to navigate</div>
-
-        {/* Carousel Container with Touch Events */}
-        <div
-          className="overflow-hidden touch-pan-y select-none"
-          onTouchStart={onTouchStart}
-          onTouchMove={onTouchMove}
-          onTouchEnd={onTouchEnd}
-        >
-          <div
-            ref={carouselRef}
-            className="flex gap-4 transition-transform duration-300 ease-in-out"
-            style={{
-              transform: `translateX(-${currentIndex * 248}px)`,
-              width: `${carouselItems.length * 248}px`,
-            }}
-          >
-            {/* Render items multiple times for infinite effect */}
-            {[...carouselItems, ...carouselItems, ...carouselItems].map(
-              (item, index) => (
+      <div className="rounded-lg p-6 mb-6 text-center max-w-full mx-auto relative">
+        {won ? (
+          <>
+            {/* Swipe Instructions */}
+            <div className="text-xs text-gray-500 mb-2">Swipe to navigate</div>
+            <div
+              className="overflow-hidden touch-pan-y select-none w-full"
+              onTouchStart={onTouchStart}
+              onTouchMove={onTouchMove}
+              onTouchEnd={onTouchEnd}
+            >
+              <div className="w-[280px] mx-auto relative overflow-hidden">
                 <div
-                  key={`${item.label}-${index}`}
-                  className="bg-white rounded-lg p-4 border aspect-square flex flex-col justify-center min-w-[240px] flex-shrink-0"
+                  ref={carouselRef}
+                  className="flex transition-transform duration-300 ease-in-out"
+                  style={{
+                    transform: `translateX(-${currentIndex * 280}px)`,
+                  }}
                 >
-                  <p className="text-xs text-gray-600 mb-1">{item.label}</p>
-                  <p className="text-lg font-bold">{item.value}</p>
+                  {/* Render items multiple times for infinite effect */}
+                  {[...carouselItems, ...carouselItems, ...carouselItems].map(
+                    (item, index) => (
+                      <div
+                        key={`${item.label}-${index}`}
+                        className="bg-white rounded-lg p-6 border aspect-square flex flex-col justify-center w-[240px] h-[240px] mx-5 flex-shrink-0 shadow-sm"
+                      >
+                        {item.isImage ? (
+                          <>
+                            <p className="text-sm text-gray-600 mb-2">
+                              {item.label}
+                            </p>
+                            <div className="flex-1 flex items-center justify-center">
+                              <a
+                                href={item.linkUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="block"
+                              >
+                                <img
+                                  src={item.imageUrl}
+                                  alt={item.label || "image"}
+                                  className="max-w-full max-h-full object-contain rounded"
+                                />
+                              </a>
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <p className="text-sm text-gray-600 mb-2">
+                              {item.label}
+                            </p>
+                            <p className="text-3xl font-bold text-gray-900">
+                              {item.value}
+                            </p>
+                          </>
+                        )}
+                      </div>
+                    )
+                  )}
                 </div>
-              )
-            )}
+              </div>
+            </div>
+            {/* Dots Indicator - Only show when won */}
+            <div className="flex justify-center mt-4 gap-2">
+              {carouselItems.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => setCurrentIndex(index)}
+                  className={`w-2 h-2 rounded-full transition-colors ${
+                    index === currentIndex ? "bg-blue-600" : "bg-gray-300"
+                  }`}
+                  aria-label={`Go to stat ${index + 1}`}
+                />
+              ))}
+            </div>
+          </>
+        ) : (
+          <div className="flex flex-col items-center">
+            <a href="https://postimages.org/" target="_blank">
+              <img
+                src="https://i.postimg.cc/x8dX3wHV/image.png"
+                border="0"
+                alt="image"
+              />
+            </a>
           </div>
-        </div>
-
-        {/* Dots Indicator */}
-        <div className="flex justify-center mt-4 gap-2">
-          {carouselItems.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => setCurrentIndex(index)}
-              className={`w-2 h-2 rounded-full transition-colors ${
-                index === currentIndex ? "bg-blue-600" : "bg-gray-300"
-              }`}
-              aria-label={`Go to stat ${index + 1}`}
-            />
-          ))}
-        </div>
+        )}
       </div>
 
       {/* Share */}
