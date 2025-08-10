@@ -229,7 +229,7 @@ export default function ConnectionsGame({ onFinish }: ConnectionsGameProps) {
       }
       
       if (status === 'selected') {
-        return `${baseClasses} bg-gray-200 border-3 border-gray-500 ${animationClasses}`
+        return `${baseClasses} bg-gray-200 ${animationClasses}`
       }
       
       if (status === 'solved') {
@@ -261,6 +261,10 @@ export default function ConnectionsGame({ onFinish }: ConnectionsGameProps) {
                   />
                   {/* Subtle gradient overlay for uniformity */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-transparent rounded-lg" />
+                  {/* Black overlay for selected items */}
+                  {status === 'selected' && (
+                    <div className="absolute inset-0 bg-black/40 rounded-lg" />
+                  )}
                 </div>
               )
             }
