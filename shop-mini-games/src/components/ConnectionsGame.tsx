@@ -320,9 +320,13 @@ export default function ConnectionsGame({ onFinish }: ConnectionsGameProps) {
                   />
                   {/* Subtle gradient overlay for uniformity */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-transparent rounded-lg" />
-                  {/* Black overlay for selected items */}
+                  {/* Black/Red overlay for selected items */}
                   {status === 'selected' && (
-                    <div className="absolute inset-0 bg-black/40 rounded-lg" />
+                    <div className={`absolute inset-0 rounded-lg ${
+                      isAnimatingThis && animationType === 'error' && animatingIds.length > 1 
+                        ? 'bg-red-500/60' 
+                        : 'bg-black/40'
+                    }`} />
                   )}
                   {/* Purple tint overlay for hinted items */}
                   {status === 'hinted' && (
@@ -352,15 +356,15 @@ export default function ConnectionsGame({ onFinish }: ConnectionsGameProps) {
       <style>{`
         @keyframes smoothBounce {
           0% { transform: translateY(0) scale(1); }
-          30% { transform: translateY(-15px) scale(1.05); }
-          60% { transform: translateY(-8px) scale(1.02); }
+          30% { transform: translateY(-8px) scale(1.02); }
+          60% { transform: translateY(-4px) scale(1.01); }
           100% { transform: translateY(0) scale(1); }
         }
         
         @keyframes shake {
           0%, 100% { transform: translateX(0); }
-          25% { transform: translateX(-4px); }
-          75% { transform: translateX(4px); }
+          25% { transform: translateX(-6px); }
+          75% { transform: translateX(6px); }
         }
         
         @keyframes celebrate {
@@ -387,7 +391,7 @@ export default function ConnectionsGame({ onFinish }: ConnectionsGameProps) {
         }
         
         .shake {
-          animation: shake 0.5s ease-in-out infinite;
+          animation: shake 0.3s ease-in-out infinite;
         }
         
         .celebrate {
