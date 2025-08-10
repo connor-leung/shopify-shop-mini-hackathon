@@ -229,7 +229,7 @@ export default function ConnectionsGame({ onFinish }: ConnectionsGameProps) {
       }
       
       if (status === 'selected') {
-        return `${baseClasses} bg-gray-300 border-4 border-gray-700 ${animationClasses}`
+        return `${baseClasses} bg-gray-200 border-3 border-gray-500 ${animationClasses}`
       }
       
       if (status === 'solved') {
@@ -245,7 +245,7 @@ export default function ConnectionsGame({ onFinish }: ConnectionsGameProps) {
         className={getItemClasses()}
         onClick={() => (disabled ? null : toggleSelect(item.id))}
       >
-        <div className="absolute inset-0 flex items-center justify-center p-1">
+        <div className="absolute inset-0 flex items-center justify-center">
           {(() => {
             const imgUrl = item.product?.featuredImage?.url || item.product?.images?.[0]?.url
             const productTitle = item.product?.title || 'Product'
@@ -267,7 +267,7 @@ export default function ConnectionsGame({ onFinish }: ConnectionsGameProps) {
             
             // Enhanced fallback for items without images
             return (
-              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg border border-gray-300">
+              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg">
                 <span className="text-xs font-medium text-center px-2 leading-tight text-gray-700">
                   {productTitle}
                 </span>
@@ -368,7 +368,7 @@ export default function ConnectionsGame({ onFinish }: ConnectionsGameProps) {
                         key={item.id}
                         className="relative rounded-lg bg-gray-200 flex items-center justify-center aspect-square overflow-hidden w-full"
                       >
-                        <div className="absolute inset-0 flex items-center justify-center p-1">
+                        <div className="absolute inset-0 flex items-center justify-center">
                           {(() => {
                             const imgUrl = item.product?.featuredImage?.url || item.product?.images?.[0]?.url
                             const productTitle = item.product?.title || 'Product'
@@ -386,7 +386,7 @@ export default function ConnectionsGame({ onFinish }: ConnectionsGameProps) {
                               )
                             }
                             return (
-                              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg border border-gray-300">
+                              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg">
                                 <span className="text-xs font-medium text-center px-1 leading-tight text-gray-700">
                                   {productTitle}
                                 </span>
