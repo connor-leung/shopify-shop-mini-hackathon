@@ -1,9 +1,16 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useGenerateGameData } from "../utils/useGenerateGameData";
+
+// Add difficulty color palette constant after imports
+const DIFFICULTY_COLORS: Record<string, { fill: string; stroke: string }> = {
+  easy: { fill: "#E2F1E2", stroke: "#92D08D" },
+  medium: { fill: "#DBF2EE", stroke: "#82DEBD" },
+  hard: { fill: "#E1D9FD", stroke: "#9C83F8" },
+  expert: { fill: "#F8DBDE", stroke: "#FF967D" },
+};
 
 interface ConnectionsGameProps {
   onFinish: (results: GameResults) => void;
-  onQuit?: () => void;
 }
 
 export interface GameResults {
@@ -23,10 +30,7 @@ export interface GameResults {
   totalGuesses: number;
 }
 
-export default function ConnectionsGame({
-  onFinish,
-  onQuit,
-}: ConnectionsGameProps) {
+export default function ConnectionsGame({ onFinish }: ConnectionsGameProps) {
   const { loading, error, categories } = useGenerateGameData();
 
   // Flattened list of all items with references to their category
