@@ -12,6 +12,7 @@ class UserProgress(Base):
     score = Column(Integer, default=0)
     completed = Column(Boolean, default=True)
     lives_remaining = Column(Integer, default=3)  # lives left after completion
+    game_type = Column(String, default="connections")  # type of game played
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
     

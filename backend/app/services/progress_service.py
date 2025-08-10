@@ -17,7 +17,8 @@ class ProgressService:
             completion_time=progress_data.completion_time,
             score=progress_data.score,
             completed=progress_data.completed,
-            lives_remaining=progress_data.lives_remaining
+            lives_remaining=progress_data.lives_remaining,
+            game_type=progress_data.game_type
         )
         self.db.add(db_progress)
         
