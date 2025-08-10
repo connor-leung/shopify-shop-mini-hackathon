@@ -425,6 +425,75 @@ export default function ConnectionsResults({
             </>
           </div>
 
+          {/* Categories Display */}
+          <div className="mb-6 space-y-2 max-w-md mx-auto">
+            <h3 className="text-lg font-bold text-center mb-4">All Categories</h3>
+            {results.allCategories.map((cat) => {
+              const isCorrectlyGuessed = results.solvedCategories.some(solved => solved.category === cat.category);
+              
+              // Difficulty colors
+              const getDifficultyColor = (difficulty: string) => {
+                switch (difficulty.toLowerCase()) {
+                  case 'easy': return { fill: '#E2F1E2', stroke: '#92D08D' }
+                  case 'medium': return { fill: '#DBF2EE', stroke: '#82DEBD' }
+                  case 'hard': return { fill: '#E1D9FD', stroke: '#9C83F8' }
+                  case 'expert': return { fill: '#F8DBDE', stroke: '#FF967D' }
+                  default: return { fill: '#E2F1E2', stroke: '#92D08D' }
+                }
+              }
+              
+              const colors = getDifficultyColor(cat.difficulty)
+              
+              return (
+                <div key={cat.category} className="rounded-xl px-3 py-2 border-2" style={{
+                  backgroundColor: colors.fill,
+                  borderColor: colors.stroke
+                }}>
+                  <div className="text-center mb-1">
+                    <h4 className="font-bold text-black text-sm uppercase tracking-wide">
+                      {cat.category} {!isCorrectlyGuessed && '(Missed)'}
+                    </h4>
+                  </div>
+                  <div className="flex gap-2 justify-center flex-wrap">
+                    {cat.items.map((item) => (
+                      <div
+                        key={item.id}
+                        className="relative rounded-lg bg-gray-200 flex items-center justify-center overflow-hidden w-12 h-12 flex-shrink-0"
+                      >
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          {(() => {
+                            const imgUrl = item.product?.featuredImage?.url || item.product?.images?.[0]?.url
+                            const productTitle = item.product?.title || 'Product'
+                            
+                            if (imgUrl) {
+                              return (
+                                <div className="w-full h-full relative">
+                                  <img 
+                                    src={imgUrl} 
+                                    alt={productTitle} 
+                                    className="w-full h-full object-cover rounded-lg brightness-90 contrast-110 saturate-75"
+                                  />
+                                  <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-transparent rounded-lg" />
+                                </div>
+                              )
+                            }
+                            return (
+                              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg">
+                                <span className="text-xs font-medium text-center px-1 leading-tight text-gray-700">
+                                  {productTitle.length > 6 ? productTitle.substring(0, 6) + '...' : productTitle}
+                                </span>
+                              </div>
+                            )
+                          })()}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
           {/* Action buttons */}
           <div className="space-y-3">
             {/* Share */}
@@ -462,6 +531,75 @@ export default function ConnectionsResults({
             <p className="text-lg text-gray-600 mb-8">
               You ran out of lives, but every attempt makes you stronger!
             </p>
+
+            {/* Categories Display */}
+            <div className="mb-6 space-y-2 max-w-md mx-auto">
+              <h3 className="text-lg font-bold text-center mb-4">All Categories</h3>
+              {results.allCategories.map((cat) => {
+                const isCorrectlyGuessed = results.solvedCategories.some(solved => solved.category === cat.category);
+                
+                // Difficulty colors
+                const getDifficultyColor = (difficulty: string) => {
+                  switch (difficulty.toLowerCase()) {
+                    case 'easy': return { fill: '#E2F1E2', stroke: '#92D08D' }
+                    case 'medium': return { fill: '#DBF2EE', stroke: '#82DEBD' }
+                    case 'hard': return { fill: '#E1D9FD', stroke: '#9C83F8' }
+                    case 'expert': return { fill: '#F8DBDE', stroke: '#FF967D' }
+                    default: return { fill: '#E2F1E2', stroke: '#92D08D' }
+                  }
+                }
+                
+                const colors = getDifficultyColor(cat.difficulty)
+                
+                return (
+                  <div key={cat.category} className="rounded-xl px-3 py-2 border-2" style={{
+                    backgroundColor: colors.fill,
+                    borderColor: colors.stroke
+                  }}>
+                    <div className="text-center mb-1">
+                      <h4 className="font-bold text-black text-sm uppercase tracking-wide">
+                        {cat.category} {!isCorrectlyGuessed && '(Missed)'}
+                      </h4>
+                    </div>
+                    <div className="flex gap-2 justify-center flex-wrap">
+                      {cat.items.map((item) => (
+                        <div
+                          key={item.id}
+                          className="relative rounded-lg bg-gray-200 flex items-center justify-center overflow-hidden w-12 h-12 flex-shrink-0"
+                        >
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            {(() => {
+                              const imgUrl = item.product?.featuredImage?.url || item.product?.images?.[0]?.url
+                              const productTitle = item.product?.title || 'Product'
+                              
+                              if (imgUrl) {
+                                return (
+                                  <div className="w-full h-full relative">
+                                    <img 
+                                      src={imgUrl} 
+                                      alt={productTitle} 
+                                      className="w-full h-full object-cover rounded-lg brightness-90 contrast-110 saturate-75"
+                                    />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-transparent rounded-lg" />
+                                  </div>
+                                )
+                              }
+                              return (
+                                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg">
+                                  <span className="text-xs font-medium text-center px-1 leading-tight text-gray-700">
+                                    {productTitle.length > 6 ? productTitle.substring(0, 6) + '...' : productTitle}
+                                  </span>
+                                </div>
+                              )
+                            })()}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
 
             {/* Loading indicator for lose condition */}
             {isSubmitting && (
