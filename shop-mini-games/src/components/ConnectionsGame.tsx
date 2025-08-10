@@ -536,9 +536,7 @@ export default function ConnectionsGame({ onFinish }: ConnectionsGameProps) {
                 }
               }}
             >
-              {gameOver ? 'Game Over' : 
-               isAnimating ? 'Processing...' :
-               'Submit'}
+              {gameOver ? 'Submit' : 'Submit'}
             </button>
             </div>
           )}
