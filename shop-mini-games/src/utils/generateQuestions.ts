@@ -50,7 +50,7 @@ export function useGenerateQuestion(difficulty: Difficulty) {
   const category = Object.keys(randomQuestion)[0];
   const searchTerms = randomQuestion[category];
 
-  // Use the first search term to get products (you can enhance this to search multiple terms)
+  // Use the first search term to get products
   const { products, loading, error } = useProductSearch({
     query: searchTerms[0], // Start with first search term
     first: 50, // Get more results to have better random selection

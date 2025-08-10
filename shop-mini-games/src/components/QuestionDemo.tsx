@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useProductSearch } from "@shopify/shop-minis-react";
 import { 
   useGenerateQuestion, 
   useGenerateRandomQuestion, 
   useGenerateQuestionWithMultipleSearches,
   getRandomQuestionPreview,
+  generateQuestionData,
   Difficulty 
 } from '../utils/generateQuestions';
 
@@ -11,12 +13,77 @@ interface QuestionDemoProps {
   onNavigate: (page: string) => void
 }
 
+interface SearchResult {
+  term: string;
+  products: any[];
+  loading: boolean;
+  error: any;
+  index: number;
+}
+
+interface ProductItem {
+  id: string;
+  product: any;
+  searchTerm: string;
+  termIndex: number;
+}
+
 const QuestionDemo: React.FC<QuestionDemoProps> = ({ onNavigate }) => {
   const [refreshKey, setRefreshKey] = useState(0);
+  const [questionStructures, setQuestionStructures] = useState<any>(null);
+
+  // Generate question structures when component mounts or refreshKey changes
+  useEffect(() => {
+    try {
+      const easyData = generateQuestionData("Easy");
+      const mediumData = generateQuestionData("Medium");
+      const hardData = generateQuestionData("Hard");
+      const expertData = generateQuestionData("Expert");
+      
+      // For random, pick one difficulty
+      const difficulties: Difficulty[] = ["Easy", "Medium", "Hard", "Expert"];
+      const randomDifficulty = difficulties[Math.floor(Math.random() * difficulties.length)];
+      const randomData = generateQuestionData(randomDifficulty);
+
+      setQuestionStructures({
+        easy: easyData,
+        medium: mediumData,
+        hard: hardData,
+        expert: expertData,
+        random: randomData
+      });
+    } catch (error) {
+      console.error('Error generating question structures:', error);
+    }
+  }, [refreshKey]);
 
   const handleRefresh = () => {
     setRefreshKey(prev => prev + 1);
   };
+
+  // Show loading state while question structures are being generated
+  if (!questionStructures) {
+    return (
+      <div className="max-w-6xl mx-auto p-6">
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-200 rounded mb-8"></div>
+          <div className="h-4 bg-gray-200 rounded mb-6"></div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="bg-white p-6 rounded-lg shadow-md">
+                <div className="h-4 bg-gray-200 rounded mb-4"></div>
+                <div className="space-y-3">
+                  <div className="h-4 bg-gray-200 rounded"></div>
+                  <div className="h-4 bg-gray-200 rounded"></div>
+                  <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-6xl mx-auto p-6">
@@ -57,7 +124,7 @@ const QuestionDemo: React.FC<QuestionDemoProps> = ({ onNavigate }) => {
           <QuestionDisplay 
             key={`easy-${refreshKey}`}
             difficulty="Easy"
-            useHook={() => useGenerateQuestion("Easy")}
+            questionStructure={questionStructures.easy}
             title="Easy Question"
           />
         </div>
@@ -70,7 +137,7 @@ const QuestionDemo: React.FC<QuestionDemoProps> = ({ onNavigate }) => {
           <QuestionDisplay 
             key={`medium-${refreshKey}`}
             difficulty="Medium"
-            useHook={() => useGenerateQuestion("Medium")}
+            questionStructure={questionStructures.medium}
             title="Medium Question"
           />
         </div>
@@ -83,7 +150,7 @@ const QuestionDemo: React.FC<QuestionDemoProps> = ({ onNavigate }) => {
           <QuestionDisplay 
             key={`hard-${refreshKey}`}
             difficulty="Hard"
-            useHook={() => useGenerateQuestion("Hard")}
+            questionStructure={questionStructures.hard}
             title="Hard Question"
           />
         </div>
@@ -96,7 +163,7 @@ const QuestionDemo: React.FC<QuestionDemoProps> = ({ onNavigate }) => {
           <QuestionDisplay 
             key={`expert-${refreshKey}`}
             difficulty="Expert"
-            useHook={() => useGenerateQuestion("Expert")}
+            questionStructure={questionStructures.expert}
             title="Expert Question"
           />
         </div>
@@ -113,7 +180,7 @@ const QuestionDemo: React.FC<QuestionDemoProps> = ({ onNavigate }) => {
           <QuestionDisplay 
             key={`random-${refreshKey}`}
             difficulty="Random"
-            useHook={() => useGenerateRandomQuestion()}
+            questionStructure={questionStructures.random}
             title="Random Difficulty"
           />
         </div>
@@ -138,6 +205,20 @@ const QuestionDemo: React.FC<QuestionDemoProps> = ({ onNavigate }) => {
           <li>The "Preview" section shows question structure without product data</li>
           <li>All sections update together when you refresh</li>
         </ul>
+        
+        <div className="mt-4 p-4 bg-blue-100 rounded-lg">
+          <h3 className="font-semibold text-blue-800 mb-2">How Questions Work:</h3>
+          <ul className="list-disc list-inside space-y-1 text-blue-700 text-sm">
+            <li><strong>Category:</strong> The theme or pattern that groups the search terms together</li>
+            <li><strong>Search Terms:</strong> Multiple related words that fit the category pattern</li>
+            <li><strong>Primary Search:</strong> We search for the first term to show sample products</li>
+            <li><strong>Product Display:</strong> Shows real products found from the search</li>
+          </ul>
+          <p className="text-blue-600 text-sm mt-2">
+            <strong>Example:</strong> Category "Starts with 'sh'" has terms: shirt, shawl, shoes, shampoo. 
+            We search for "shirt" and show products that match that pattern.
+          </p>
+        </div>
       </div>
     </div>
   );
@@ -146,12 +227,46 @@ const QuestionDemo: React.FC<QuestionDemoProps> = ({ onNavigate }) => {
 // Component to display question data
 const QuestionDisplay: React.FC<{
   difficulty: Difficulty | 'Random';
-  useHook: () => any;
+  questionStructure: any;
   title: string;
-}> = ({ difficulty, useHook, title }) => {
-  const questionData = useHook();
+}> = ({ difficulty, questionStructure, title }) => {
+  // Search for each search term individually to get one product per term
+  const searchResults = questionStructure.searchTerms?.map((term: string, index: number) => {
+    const { products, loading, error } = useProductSearch({
+      query: term,
+      first: 1, // Only get 1 product per search term
+    });
+    
+    return {
+      term,
+      products,
+      loading,
+      error,
+      index
+    };
+  }) || [];
 
-  if (questionData.loading) {
+  // Check if any searches are still loading
+  const isLoading = searchResults.some(result => result.loading);
+  
+  // Check if any searches have errors
+  const hasError = searchResults.some(result => result.error);
+  const firstError = searchResults.find(result => result.error)?.error;
+
+  // Process the products - one per search term
+  const items = searchResults
+    .filter((result: SearchResult) => result.products && result.products.length > 0)
+    .map((result: SearchResult, index: number) => {
+      const product = result.products[0]; // Take the first product from each search
+      return {
+        id: product.id,
+        product: product,
+        searchTerm: result.term,
+        termIndex: result.index
+      };
+    });
+
+  if (isLoading) {
     return (
       <div className="animate-pulse">
         <div className="h-4 bg-gray-200 rounded mb-2"></div>
@@ -161,10 +276,10 @@ const QuestionDisplay: React.FC<{
     );
   }
 
-  if (questionData.error) {
+  if (hasError) {
     return (
       <div className="text-red-600 p-3 bg-red-50 rounded">
-        Error: {questionData.error.message || 'Failed to load question'}
+        Error: {firstError?.message || 'Failed to load some questions'}
       </div>
     );
   }
@@ -177,50 +292,56 @@ const QuestionDisplay: React.FC<{
         <div className="flex items-center gap-2">
           <span className="font-medium text-gray-600">Difficulty:</span>
           <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-sm">
-            {questionData.difficulty}
+            {questionStructure.difficulty}
           </span>
         </div>
         
         <div className="flex items-center gap-2">
           <span className="font-medium text-gray-600">Category:</span>
           <span className="px-2 py-1 bg-green-100 text-green-800 rounded text-sm">
-            {questionData.category}
+            {questionStructure.category}
           </span>
         </div>
         
         <div>
-          <span className="font-medium text-gray-600">Search Terms:</span>
-          <div className="flex flex-wrap gap-1 mt-1">
-            {questionData.searchTerms?.map((term: string, index: number) => (
-              <span key={index} className="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs">
-                {term}
-              </span>
-            ))}
+          <span className="font-medium text-gray-600">Search Terms & Products:</span>
+          <div className="text-xs text-gray-500 mb-2">
+            Each search term finds exactly 1 product
+          </div>
+          <div className="space-y-2">
+            {questionStructure.searchTerms?.map((term: string, index: number) => {
+              const item = items.find((item: ProductItem) => item.termIndex === index);
+              return (
+                <div key={index} className="flex items-center gap-2 p-2 bg-gray-50 rounded">
+                  <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium min-w-[60px]">
+                    {term}
+                  </span>
+                  <span className="text-gray-500">→</span>
+                  {item ? (
+                    <div className="flex-1 text-xs">
+                      <div className="font-medium">{item.product?.title || 'No title'}</div>
+                      <div className="text-gray-600">
+                        ${item.product?.priceRange?.minVariantPrice?.amount || 'N/A'}
+                      </div>
+                      <div className="text-gray-500 font-mono text-xs truncate">
+                        GID: {item.product?.id || 'N/A'}
+                      </div>
+                    </div>
+                  ) : (
+                    <span className="text-red-500 text-xs">No product found</span>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
         
         <div>
-          <span className="font-medium text-gray-600">Products Found:</span>
+          <span className="font-medium text-gray-600">Summary:</span>
           <div className="text-sm text-gray-500 mt-1">
-            {questionData.items?.length || 0} products
+            {items.length} out of {questionStructure.searchTerms?.length || 0} search terms found products
           </div>
         </div>
-        
-        {questionData.items && questionData.items.length > 0 && (
-          <div>
-            <span className="font-medium text-gray-600">Product Details:</span>
-            <div className="mt-2 space-y-2">
-              {questionData.items.map((item: any, index: number) => (
-                <div key={index} className="p-2 bg-gray-50 rounded text-xs">
-                  <div className="font-medium">ID: {item.id}</div>
-                  <div className="text-gray-600 truncate">
-                    {item.product?.title || 'No title'} - ${item.product?.priceRange?.minVariantPrice?.amount || 'N/A'}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
