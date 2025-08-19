@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { HomePage } from "./components/HomePage";
+import { HomePage } from "./HomePage";
 import { SearchPage } from "./search/searchPage";
 import QuestionDemo from "./components/QuestionDemo";
 import ConnectionsIntro from "./miniLink/ConnectionsIntro";
 import ConnectionsGame from "./miniLink/ConnectionsGame";
 import ConnectionsResults from "./miniLink/ConnectionsResults";
-import GameItemsPage from "./components/GameItemsPage";
+import GameItemsPage from "./miniLink/GameItemsPage";
 import MiniHuntPage from "./miniHunt/MiniHuntPage";
 
 export function App() {

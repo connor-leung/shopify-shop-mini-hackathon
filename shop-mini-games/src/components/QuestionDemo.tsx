@@ -1,9 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useProductSearch } from "@shopify/shop-minis-react";
 import { 
-  useGenerateQuestion, 
-  useGenerateRandomQuestion, 
-  useGenerateQuestionWithMultipleSearches,
   getRandomQuestionPreview,
   generateQuestionData,
   Difficulty 

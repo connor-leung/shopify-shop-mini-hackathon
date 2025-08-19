@@ -1,6 +1,6 @@
-import ProductCard from "./ProductCard";
+import ProductCard from "../components/ProductCard";
 import { GameResults } from "./ConnectionsGame";
-import { Button } from "./Button";
+import { Button } from "../components/Button";
 
 interface GameItemsPageProps {
   results: GameResults;
