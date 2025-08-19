@@ -1,9 +1,9 @@
 # Shopify Shop Mini Hackathon
 
-Created mini games for Shop Mini! 
+Created mini games for Shop Mini!
 
-Games include: 
-- Connections but with products in the Shop catalog 
+Games include:
+- Connections but with products in the Shopify SDK
 - Wikipedia hunt but with getting from one product to another
 
 Designs by Julia

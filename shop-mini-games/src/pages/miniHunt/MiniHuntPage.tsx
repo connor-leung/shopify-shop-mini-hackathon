@@ -5,7 +5,7 @@ import {
   neighbors,
   existsWithinJumps,
   PathResult,
-} from "../utils/miniHunt";
+} from "../../utils/miniHunt";
 
 interface GameState {
   startProduct: ProductNode | null;

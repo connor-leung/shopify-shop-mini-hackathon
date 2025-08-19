@@ -1,5 +1,5 @@
 import { usePopularProducts, ProductCard } from "@shopify/shop-minis-react";
-import { Button } from "./Button";
+import { Button } from "../components/Button";
 
 interface HomePageProps {
   onNavigate: (page: string) => void;
