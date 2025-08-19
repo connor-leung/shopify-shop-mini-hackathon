@@ -1,12 +1,12 @@
 import { useState } from "react";
-import { HomePage } from "./HomePage";
-import { SearchPage } from "./search/searchPage";
-import QuestionDemo from "./components/QuestionDemo";
-import ConnectionsIntro from "./miniLink/ConnectionsIntro";
-import ConnectionsGame from "./miniLink/ConnectionsGame";
-import ConnectionsResults from "./miniLink/ConnectionsResults";
-import GameItemsPage from "./miniLink/GameItemsPage";
-import MiniHuntPage from "./miniHunt/MiniHuntPage";
+import { HomePage } from "./pages/HomePage";
+import { SearchPage } from "./pages/search/searchPage";
+import QuestionDemo from "./pages/search/QuestionDemo";
+import ConnectionsIntro from "./pages/miniLink/ConnectionsIntro";
+import ConnectionsGame from "./pages/miniLink/ConnectionsGame";
+import ConnectionsResults from "./pages/miniLink/ConnectionsResults";
+import GameItemsPage from "./pages/miniLink/GameItemsPage";
+import MiniHuntPage from "./pages/miniHunt/MiniHuntPage";
 
 export function App() {
   const [currentPage, setCurrentPage] = useState("home");

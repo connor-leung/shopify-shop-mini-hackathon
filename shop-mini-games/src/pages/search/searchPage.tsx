@@ -4,11 +4,11 @@ import {
   useProductsByCategory,
   getAvailableCategories,
   getCategoryInfo,
-} from "../utils/productSearch";
-import ProductCard from "../components/ProductCard";
+} from "../../utils/productSearch";
+import ProductCard from "../../components/ProductCard";
 
 interface SearchPageProps {
-  onNavigate: (page: string) => void
+  onNavigate: (page: string) => void;
 }
 
 export function SearchPage({ onNavigate }: SearchPageProps) {
@@ -78,17 +78,17 @@ export function SearchPage({ onNavigate }: SearchPageProps) {
       <h1 className="text-2xl font-bold mb-2 text-center">
         Welcome to Shop Minis!
       </h1>
-      
+
       {/* Navigation */}
       <div className="flex justify-center space-x-4 mb-6">
-        <button 
-          onClick={() => onNavigate('home')}
+        <button
+          onClick={() => onNavigate("home")}
           className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
         >
           Home
         </button>
-        <button 
-          onClick={() => onNavigate('search')}
+        <button
+          onClick={() => onNavigate("search")}
           className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
         >
           Search Products
