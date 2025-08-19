@@ -2,9 +2,9 @@ import { useState } from "react";
 import { HomePage } from "./components/HomePage";
 import { SearchPage } from "./search/searchPage";
 import QuestionDemo from "./components/QuestionDemo";
-import ConnectionsIntro from "./components/ConnectionsIntro";
-import ConnectionsGame from "./components/ConnectionsGame";
-import ConnectionsResults from "./components/ConnectionsResults";
+import ConnectionsIntro from "./miniLink/ConnectionsIntro";
+import ConnectionsGame from "./miniLink/ConnectionsGame";
+import ConnectionsResults from "./miniLink/ConnectionsResults";
 import GameItemsPage from "./components/GameItemsPage";
 import MiniHuntPage from "./miniHunt/MiniHuntPage";
 
@@ -38,7 +38,6 @@ export function App() {
               setResults(results);
               setCurrentPage("connections-results");
             }}
-            onQuit={() => setCurrentPage("home")}
           />
         );
 
