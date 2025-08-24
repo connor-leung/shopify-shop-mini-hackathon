@@ -1,4 +1,3 @@
-import React from "react";
 import { Button } from "../../components/Button";
 
 interface ConnectionsIntroProps {
@@ -9,7 +8,6 @@ interface ConnectionsIntroProps {
 // Intro / how-to-play screen for the Shopify Connections game
 export default function ConnectionsIntro({
   onStart,
-  onBack,
 }: ConnectionsIntroProps) {
   return (
     <div
