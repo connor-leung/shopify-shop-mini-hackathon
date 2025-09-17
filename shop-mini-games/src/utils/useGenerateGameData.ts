@@ -14,10 +14,10 @@ export interface UseGenerateGameDataResult {
 
 // Generates one question for each difficulty level. Useful for the Connections game.
 export function useGenerateGameData(): UseGenerateGameDataResult {
-  const easy = useGenerateQuestionWithMultipleSearches('Easy')
-  const medium = useGenerateQuestionWithMultipleSearches('Medium')
-  const hard = useGenerateQuestionWithMultipleSearches('Hard')
-  const expert = useGenerateQuestionWithMultipleSearches('Expert')
+  const easy = useGenerateQuestionWithMultipleSearches('easy')
+  const medium = useGenerateQuestionWithMultipleSearches('medium')
+  const hard = useGenerateQuestionWithMultipleSearches('hard')
+  const expert = useGenerateQuestionWithMultipleSearches('expert')
 
   const loading = easy.loading || medium.loading || hard.loading || expert.loading
   // Prefer the first truthy error
@@ -25,22 +25,22 @@ export function useGenerateGameData(): UseGenerateGameDataResult {
 
   const categories: GameCategory[] = loading || error ? [] : [
     {
-      difficulty: 'Easy',
+      difficulty: 'easy',
       category: easy.category,
       items: easy.items,
     },
     {
-      difficulty: 'Medium',
+      difficulty: 'medium',
       category: medium.category,
       items: medium.items,
     },
     {
-      difficulty: 'Hard',
+      difficulty: 'hard',
       category: hard.category,
       items: hard.items,
     },
     {
-      difficulty: 'Expert',
+      difficulty: 'expert',
       category: expert.category,
       items: expert.items,
     },

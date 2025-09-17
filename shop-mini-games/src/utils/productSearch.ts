@@ -27,7 +27,7 @@ export const PRODUCT_CATEGORIES: Record<string, CategoryConfig> = {
     description: "Toys and games for all ages",
   },
   shoes: {
-    searchTerms: ["shoe", "sneaker", "boot", "sandal", "heel", "footwea1r"],
+    searchTerms: ["shoe", "sneaker", "boot", "sandal", "heel", "footwear"],
     maxResults: NUMBER_OF_ITEMS,
     description: "All types of footwear",
   },

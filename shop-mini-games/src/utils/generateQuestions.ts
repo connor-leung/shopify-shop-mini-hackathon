@@ -2,7 +2,7 @@ import { useProductSearch } from "@shopify/shop-minis-react";
 import { useMemo } from "react";
 import { easy, medium, hard, expert } from "../questions/questions";
 
-export type Difficulty = "Easy" | "Medium" | "Hard" | "Expert";
+export type Difficulty = "easy" | "medium" | "hard" | "expert";
 
 export interface QuestionData {
   difficulty: Difficulty;
@@ -18,38 +18,32 @@ function getRandomItem<T>(array: T[]): T {
   return array[Math.floor(Math.random() * array.length)];
 }
 
-// Helper function to get random product from search results
-function getRandomProduct(products: any[]): any | null {
-  if (!products || products.length === 0) return null;
-  return getRandomItem(products);
+// Helper function to select unique products by ID
+function selectUniqueProducts(products: any[], count: number): any[] {
+  if (!products || products.length === 0) return [];
+  
+  const uniqueProducts: any[] = [];
+  const usedIds = new Set<string>();
+  const shuffledProducts = [...products].sort(() => Math.random() - 0.5);
+  
+  for (const product of shuffledProducts) {
+    if (!usedIds.has(product.id) && uniqueProducts.length < count) {
+      uniqueProducts.push(product);
+      usedIds.add(product.id);
+    }
+  }
+  
+  return uniqueProducts;
 }
 
 // Hook to generate a question with products for a specific difficulty
 export function useGenerateQuestion(difficulty: Difficulty) {
-  let questionPool: any[];
-  
-  // Select the appropriate difficulty pool
-  switch (difficulty) {
-    case "Easy":
-      questionPool = easy;
-      break;
-    case "Medium":
-      questionPool = medium;
-      break;
-    case "Hard":
-      questionPool = hard;
-      break;
-    case "Expert":
-      questionPool = expert;
-      break;
-    default:
-      throw new Error(`Invalid difficulty: ${difficulty}`);
-  }
+  const difficultyPools: Record<Difficulty, any[]> = { easy: easy, medium: medium, hard: hard, expert: expert };
 
   // Pick a random question only once per component lifecycle to avoid re-randomizing on every render
-  const randomQuestion = useMemo(() => getRandomItem(questionPool), []);
+  const randomQuestion = useMemo(() => getRandomItem(difficultyPools[difficulty]), [difficulty]);
   const category = Object.keys(randomQuestion)[0];
-  const searchTerms = randomQuestion[category];
+  const searchTerms = randomQuestion[category] as string[];
 
   // Use the first search term to get products
   const { products, loading, error } = useProductSearch({
@@ -57,8 +51,8 @@ export function useGenerateQuestion(difficulty: Difficulty) {
     first: 50, // Get more results to have better random selection
   });
 
-  // Process the products to match the question format
-  const items = products ? products.slice(0, searchTerms.length).map((product, index) => ({
+  // Process the products to match the question format, ensuring no duplicates
+  const items = products ? selectUniqueProducts(products, searchTerms.length).map((product) => ({
     id: product.id,
     product: product
   })) : [];
@@ -75,36 +69,19 @@ export function useGenerateQuestion(difficulty: Difficulty) {
 
 // Hook to generate a random question with any difficulty
 export function useGenerateRandomQuestion() {
-  const difficulties: Difficulty[] = ["Easy", "Medium", "Hard", "Expert"];
+  const difficulties: Difficulty[] = ["easy", "medium", "hard", "expert"];
   const randomDifficulty = getRandomItem(difficulties);
   return useGenerateQuestion(randomDifficulty);
 }
 
 // Enhanced hook that searches for multiple products using different search terms
 export function useGenerateQuestionWithMultipleSearches(difficulty: Difficulty) {
-  // Select the appropriate difficulty pool
-  let questionPool: any[];
-  switch (difficulty) {
-    case 'Easy':
-      questionPool = easy;
-      break;
-    case 'Medium':
-      questionPool = medium;
-      break;
-    case 'Hard':
-      questionPool = hard;
-      break;
-    case 'Expert':
-      questionPool = expert;
-      break;
-    default:
-      throw new Error(`Invalid difficulty: ${difficulty}`);
-  }
+  const difficultyPools: Record<Difficulty, any[]> = { easy: easy, medium: medium, hard: hard, expert: expert };
 
   // Memoize chosen question so hooks count stays stable
-  const randomQuestion = useMemo(() => getRandomItem(questionPool), []);
+  const randomQuestion = useMemo(() => getRandomItem(difficultyPools[difficulty]), [difficulty]);
   const category = Object.keys(randomQuestion)[0];
-  const searchTerms: string[] = randomQuestion[category];
+  const searchTerms: string[] = randomQuestion[category] as string[];
 
   // For each search term perform its own product search
   const results = searchTerms.map((term) =>
@@ -115,24 +92,38 @@ export function useGenerateQuestionWithMultipleSearches(difficulty: Difficulty) 
   const error = results.find((r) => r.error)?.error || null;
 
   const items: Array<{ id: string; product: any }> = [];
+  const usedIds = new Set<string>();
+  
+  // First, try to get one unique product from each search result
   results.forEach((r) => {
-    const product = r.products?.[0];
-    if (product) {
-      items.push({ id: product.id, product });
+    if (r.products && r.products.length > 0) {
+      // Find a product that hasn't been used yet
+      const uniqueProduct = r.products.find(product => !usedIds.has(product.id));
+      if (uniqueProduct) {
+        items.push({ id: uniqueProduct.id, product: uniqueProduct });
+        usedIds.add(uniqueProduct.id);
+      }
     }
   });
 
-  // If we don't have enough products, fill with random ones from the first successful search
+  // If we don't have enough unique products, try to fill from all available products
   if (items.length < searchTerms.length) {
-    const firstSuccessfulResult = results.find(r => r.products && r.products.length > 0);
-    if (firstSuccessfulResult) {
-      const usedIds = new Set(items.map(item => item.id));
-      firstSuccessfulResult.products?.forEach(product => {
-        if (items.length < searchTerms.length && !usedIds.has(product.id)) {
-          items.push({ id: product.id, product });
-        }
-      });
-    }
+    const allProducts: any[] = [];
+    results.forEach(r => {
+      if (r.products) {
+        allProducts.push(...r.products);
+      }
+    });
+    
+    // Get additional unique products
+    const additionalProducts = selectUniqueProducts(
+      allProducts.filter(product => !usedIds.has(product.id)), 
+      searchTerms.length - items.length
+    );
+    
+    additionalProducts.forEach(product => {
+      items.push({ id: product.id, product });
+    });
   }
 
   return {
@@ -151,28 +142,11 @@ export function generateQuestionData(difficulty: Difficulty): {
   category: string;
   searchTerms: string[];
 } {
-  let questionPool: any[];
-  
-  switch (difficulty) {
-    case "Easy":
-      questionPool = easy;
-      break;
-    case "Medium":
-      questionPool = medium;
-      break;
-    case "Hard":
-      questionPool = hard;
-      break;
-    case "Expert":
-      questionPool = expert;
-      break;
-    default:
-      throw new Error(`Invalid difficulty: ${difficulty}`);
-  }
+  const difficultyPools: Record<Difficulty, any[]> = { easy: easy, medium: medium, hard: hard, expert: expert };
 
-  const randomQuestion = getRandomItem(questionPool);
+  const randomQuestion = getRandomItem(difficultyPools[difficulty]);
   const category = Object.keys(randomQuestion)[0];
-  const searchTerms = randomQuestion[category];
+  const searchTerms = randomQuestion[category] as string[];
 
   return {
     difficulty,
@@ -183,7 +157,7 @@ export function generateQuestionData(difficulty: Difficulty): {
 
 // Utility function to get available difficulties
 export function getAvailableDifficulties(): Difficulty[] {
-  return ["Easy", "Medium", "Hard", "Expert"];
+  return ["easy", "medium", "hard", "expert"];
 }
 
 // Utility function to get random question without products (for planning/preview)
@@ -192,7 +166,7 @@ export function getRandomQuestionPreview(difficulty?: Difficulty): {
   category: string;
   searchTerms: string[];
 } {
-  const difficulties: Difficulty[] = ["Easy", "Medium", "Hard", "Expert"];
+  const difficulties: Difficulty[] = ["easy", "medium", "hard", "expert"];
   const selectedDifficulty = difficulty || getRandomItem(difficulties);
   
   return generateQuestionData(selectedDifficulty);
