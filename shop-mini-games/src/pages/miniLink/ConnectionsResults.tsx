@@ -3,14 +3,13 @@ import { GameResults } from "./ConnectionsGame";
 import {
   getUserId,
   UserStats,
-  GameStats,
-  LeaderboardResponse,
-} from "../../utils/api";
-import {
+  PersonalStats,
   updateLocalStats,
   createProgressData,
   submitGameResults,
   createShareText,
+  getLivesComparedToAverage,
+  isNewPersonalRecord,
 } from "../../utils/connectionsStats";
 import { Button } from "../../components/Button";
 
@@ -60,43 +59,12 @@ export default function ConnectionsResults({
   const { won, mistakes, elapsedSeconds, totalGuesses, solvedCategories } =
     results;
   const [userStats, setUserStats] = useState<UserStats | null>(null);
-  const [gameStats, setGameStats] = useState<GameStats | null>(null);
-  const [leaderboard, setLeaderboard] = useState<LeaderboardResponse | null>(
-    null
-  );
+  const [personalStats, setPersonalStats] = useState<PersonalStats | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Confetti state
   const [showConfetti, setShowConfetti] = useState(false);
 
-  // Helper function to calculate speed percentage
-  const getSpeedPercentage = () => {
-    if (
-      !gameStats ||
-      !gameStats.average_completion_time ||
-      gameStats.average_completion_time <= 0
-    ) {
-      return null;
-    }
-
-    const averageTime = gameStats.average_completion_time;
-    const userTime = elapsedSeconds;
-
-    if (userTime >= averageTime) {
-      return null; // User is not faster
-    }
-
-    const percentageFaster = Math.round(
-      ((averageTime - userTime) / averageTime) * 100
-    );
-
-    // Round to nearest milestone: 25%, 50%, 75%, or 90%
-    if (percentageFaster >= 85) return 90;
-    if (percentageFaster >= 62.5) return 75;
-    if (percentageFaster >= 37.5) return 50;
-    if (percentageFaster >= 12.5) return 25;
-    return null;
-  };
 
   // Carousel state
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -118,6 +86,8 @@ export default function ConnectionsResults({
       }, 4000);
       return () => clearTimeout(timer);
     }
+    // Return undefined when won is false
+    return undefined;
   }, [won]);
 
   // Persist lifetime stats and submit to backend
@@ -138,40 +108,17 @@ export default function ConnectionsResults({
           mistakes
         );
 
-        // Submit to backend and fetch all related data
-        const { userStats, gameStats, leaderboard } = await submitGameResults(
+        // Process local data
+        const { userStats, personalStats } = await submitGameResults(
           progressData
         );
 
-        // Update component state with fetched data
+        // Update component state with processed data
         setUserStats(userStats);
-        setGameStats(gameStats);
-        setLeaderboard(leaderboard);
+        setPersonalStats(personalStats);
       } catch (error) {
-        // Server failed, use mock data
-        const mockUserStats: UserStats = {
-          user_id: userId,
-          total_games_played: Math.floor(Math.random() * 10) + 5,
-          best_time: Math.floor(Math.random() * 30) + 15,
-          average_time: Math.floor(Math.random() * 20) + 35,
-          average_lives_remaining: Math.random() * 2 + 1,
-          total_score: Math.floor(Math.random() * 100) + 50,
-          current_streak: Math.floor(Math.random() * 5) + 1,
-          longest_streak: Math.floor(Math.random() * 10) + 3,
-          last_played: new Date().toISOString(),
-        };
-
-        const mockGameStats: GameStats = {
-          total_players: 247,
-          average_completion_time: 45,
-          average_lives_remaining: 2.1,
-          total_games_played: 1842,
-          completion_rate: 68,
-        };
-
-        setUserStats(mockUserStats);
-        setGameStats(mockGameStats);
-        setLeaderboard(null);
+        // Since we're using local storage only, this shouldn't happen
+        console.error("Error processing local data:", error);
       } finally {
         setIsSubmitting(false);
       }
@@ -249,10 +196,10 @@ export default function ConnectionsResults({
             <div className="flex flex-col">
               <span className="text-3xl font-bold pb-2">On fire! 🎉</span>
               <span>
-                Today's avg:{" "}
-                {gameStats?.average_completion_time
-                  ? `${Math.round(gameStats.average_completion_time)}s`
-                  : "Loading..."}
+                Your avg:{" "}
+                {userStats?.average_time
+                  ? `${Math.round(userStats.average_time)}s`
+                  : "First win!"}
               </span>
             </div>
           </h1>
@@ -283,110 +230,88 @@ export default function ConnectionsResults({
                     {/* Streaks Component - NEW FIRST COMPONENT */}
                     <div className="bg-white rounded-lg p-6 border aspect-square flex flex-col justify-center w-[240px] h-[240px] mx-5 flex-shrink-0 shadow-sm">
                       <span className="text-5xl pb-4">🔥</span>
-                      <p className="text-2xl font-bold mb-2">Current Streak</p>
-                      <p className="text-xl font-bold text-gray-900">
+                      <p className="text-2xl font-bold mb-2">
+                        {won ? "Streak Extended!" : "Current Streak"}
+                      </p>
+                      <p className={`text-xl font-bold ${won ? "text-orange-600" : "text-gray-900"}`}>
                         {`${userStats?.current_streak || 0}-day streak`}
                       </p>
+                      {userStats && userStats.longest_streak > userStats.current_streak && (
+                        <p className="text-sm text-gray-500 mt-1">
+                          Best: {userStats.longest_streak} days
+                        </p>
+                      )}
                     </div>
 
                     {/* Time Component */}
                     <div className="bg-white rounded-lg p-6 border aspect-square flex flex-col justify-center w-[240px] h-[240px] mx-5 flex-shrink-0 shadow-sm">
                       <span className="text-5xl pb-4">⏱️</span>
-                      <p className="text-2xl font-bold mb-2">Elapsed Time</p>
-                      <p className="text-xl font-bold text-gray-900">
+                      <p className="text-2xl font-bold mb-2">
+                        {isNewPersonalRecord(elapsedSeconds) && won ? "New Record!" : "Elapsed Time"}
+                      </p>
+                      <p className={`text-xl font-bold ${isNewPersonalRecord(elapsedSeconds) && won ? "text-yellow-600" : "text-gray-900"}`}>
                         {elapsedSeconds}s
+                        {isNewPersonalRecord(elapsedSeconds) && won && " 🏆"}
                       </p>
                     </div>
 
-                    {/* Mistakes Component */}
+                    {/* Lives vs Personal Average Component */}
                     <div className="bg-white rounded-lg p-6 border aspect-square flex flex-col justify-center w-[240px] h-[240px] mx-5 flex-shrink-0 shadow-sm">
                       <span className="text-5xl pb-4">⚡️</span>
                       <p className="text-2xl font-bold mb-2">
-                        More Lives Remaining
+                        Lives vs Your Average
                       </p>
-                      {gameStats &&
-                        (() => {
-                          // Calculate average mistakes (4 - average_lives_remaining)
-                          const avgMistakes = Math.max(
-                            0,
-                            4 - (gameStats.average_lives_remaining || 2)
-                          );
-                          const userMistakes = mistakes;
-
-                          // If user made same or more mistakes than average, show mock data
-                          if (userMistakes >= avgMistakes) {
-                            // Show mock percentage for better user experience
-                            const mockPercentages = [25, 50, 75, 90];
-                            const randomMockPercentage =
-                              mockPercentages[
-                                Math.floor(
-                                  Math.random() * mockPercentages.length
-                                )
-                              ];
-                            return (
-                              <p className="text-xl font-bold text-gray-900">
-                                than {randomMockPercentage}% of shop users
-                              </p>
-                            );
-                          }
-
-                          const percentageBetter = Math.round(
-                            ((avgMistakes - userMistakes) / avgMistakes) * 100
-                          );
-
-                          // Round to nearest milestone
-                          let displayPercentage;
-                          if (percentageBetter >= 85) displayPercentage = 90;
-                          else if (percentageBetter >= 62.5)
-                            displayPercentage = 75;
-                          else if (percentageBetter >= 37.5)
-                            displayPercentage = 50;
-                          else if (percentageBetter >= 12.5)
-                            displayPercentage = 25;
-                          else displayPercentage = null;
-
-                          return displayPercentage ? (
+                      {(() => {
+                        const currentLives = 4 - mistakes;
+                        const livesComparison = getLivesComparedToAverage(currentLives);
+                        
+                        if (livesComparison.difference === null) {
+                          return (
                             <p className="text-xl font-bold text-gray-900">
-                              than {displayPercentage}% of shop users
+                              {currentLives} lives remaining
                             </p>
-                          ) : null;
-                        })()}
+                          );
+                        }
+                        
+                        if (livesComparison.isAboveAverage) {
+                          return (
+                            <p className="text-xl font-bold text-green-600">
+                              +{livesComparison.difference} above your average!
+                            </p>
+                          );
+                        } else if (livesComparison.difference < 0) {
+                          return (
+                            <p className="text-xl font-bold text-orange-600">
+                              {livesComparison.difference} vs your average
+                            </p>
+                          );
+                        } else {
+                          return (
+                            <p className="text-xl font-bold text-gray-900">
+                              Exactly your average!
+                            </p>
+                          );
+                        }
+                      })()}
                     </div>
 
-                    {/* Guesses Component */}
+                    {/* Personal Progress Component */}
                     <div className="bg-white rounded-lg p-6 border aspect-square flex flex-col justify-center w-[240px] h-[240px] mx-5 flex-shrink-0 shadow-sm">
-                      <span className="text-5xl pb-4">🧐</span>
-                      <p className="text-2xl font-bold mb-2">Smarter than</p>
-                      {gameStats &&
-                        (() => {
-                          // Estimate average guesses based on completion rate and game data
-                          const avgGuesses = Math.round(
-                            6 + (100 - (gameStats.completion_rate || 50)) / 10
-                          );
-                          const userGuesses = totalGuesses;
-                          if (userGuesses >= avgGuesses) return null; // Only show if better than average
-
-                          const percentageBetter = Math.round(
-                            ((avgGuesses - userGuesses) / avgGuesses) * 100
-                          );
-
-                          // Round to nearest milestone
-                          let displayPercentage;
-                          if (percentageBetter >= 85) displayPercentage = 90;
-                          else if (percentageBetter >= 62.5)
-                            displayPercentage = 75;
-                          else if (percentageBetter >= 37.5)
-                            displayPercentage = 50;
-                          else if (percentageBetter >= 12.5)
-                            displayPercentage = 25;
-                          else displayPercentage = null;
-
-                          return displayPercentage ? (
-                            <p className="text-xl font-bold text-gray-900">
-                              {displayPercentage}% of shop users
-                            </p>
-                          ) : null;
-                        })()}
+                      <span className="text-5xl pb-4">📊</span>
+                      <p className="text-2xl font-bold mb-2">Win Rate</p>
+                        {personalStats && (
+                        <p className="text-xl font-bold text-gray-900">
+                          {personalStats.total_games_played > 0 ? 
+                            `${personalStats.completion_rate}%` :
+                            "Play more!"
+                          }
+                        </p>
+                      )}
+                      {personalStats && personalStats.total_games_played > 0 && (
+                        <p className="text-sm text-gray-500 mt-1">
+                          {personalStats.total_games_played} games played
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -419,7 +344,7 @@ export default function ConnectionsResults({
                   className={`w-2 h-2 rounded-full transition-colors ${
                     3 === currentIndex ? "bg-blue-600" : "bg-gray-300"
                   }`}
-                  aria-label="Go to Guesses stat"
+                  aria-label="Go to Win Rate stat"
                 />
               </div>
             </>
@@ -427,16 +352,6 @@ export default function ConnectionsResults({
 
           {/* Action buttons */}
           <div className="space-y-3">
-            {/* Share */}
-            <Button
-              onClick={() => {
-                navigator.clipboard.writeText(shareText);
-              }}
-              className="w-full"
-              variant="outline"
-            >
-              Share Results
-            </Button>
 
             {/* View Game Items */}
             <Button
