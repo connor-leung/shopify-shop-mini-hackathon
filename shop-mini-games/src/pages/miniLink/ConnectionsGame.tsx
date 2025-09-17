@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useGenerateGameData } from "../../utils/useGenerateGameData";
+import { BackButton } from "../../components/BackButton";
 
 // Add difficulty color palette constant after imports
 const DIFFICULTY_COLORS: Record<string, { fill: string; stroke: string }> = {
@@ -11,6 +12,7 @@ const DIFFICULTY_COLORS: Record<string, { fill: string; stroke: string }> = {
 
 interface ConnectionsGameProps {
   onFinish: (results: GameResults) => void;
+  onBack?: () => void;
 }
 
 export interface GameResults {
@@ -30,7 +32,7 @@ export interface GameResults {
   totalGuesses: number;
 }
 
-export default function ConnectionsGame({ onFinish }: ConnectionsGameProps) {
+export default function ConnectionsGame({ onFinish, onBack }: ConnectionsGameProps) {
   const { loading, error, categories } = useGenerateGameData();
 
   // Flattened list of all items with references to their category
@@ -488,6 +490,14 @@ export default function ConnectionsGame({ onFinish }: ConnectionsGameProps) {
           background: "linear-gradient(to bottom, #FAFAFA,rgb(233, 228, 255))",
         }}
       >
+        {/* Back Button */}
+        {onBack && (
+          <BackButton
+            onClick={onBack}
+            variant="floating"
+          />
+        )}
+        
         <div className="max-w-md w-full">
           {/* Game Title */}
           <div className="text-center mb-8">
