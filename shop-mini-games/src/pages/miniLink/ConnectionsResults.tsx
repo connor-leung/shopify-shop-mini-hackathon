@@ -298,95 +298,31 @@ export default function ConnectionsResults({
                       </p>
                     </div>
 
-                    {/* Mistakes Component */}
+                    {/* Lives Remaining Component */}
                     <div className="bg-white rounded-lg p-6 border aspect-square flex flex-col justify-center w-[240px] h-[240px] mx-5 flex-shrink-0 shadow-sm">
                       <span className="text-5xl pb-4">⚡️</span>
-                      <p className="text-2xl font-bold mb-2">
-                        More Lives Remaining
+                      <p className="text-2xl font-bold mb-2">Lives Remaining</p>
+                      <p className="text-xl font-bold text-gray-900">
+                        {4 - mistakes} out of 4
                       </p>
-                      {gameStats &&
-                        (() => {
-                          // Calculate average mistakes (4 - average_lives_remaining)
-                          const avgMistakes = Math.max(
-                            0,
-                            4 - (gameStats.average_lives_remaining || 2)
-                          );
-                          const userMistakes = mistakes;
-
-                          // If user made same or more mistakes than average, show mock data
-                          if (userMistakes >= avgMistakes) {
-                            // Show mock percentage for better user experience
-                            const mockPercentages = [25, 50, 75, 90];
-                            const randomMockPercentage =
-                              mockPercentages[
-                                Math.floor(
-                                  Math.random() * mockPercentages.length
-                                )
-                              ];
-                            return (
-                              <p className="text-xl font-bold text-gray-900">
-                                than {randomMockPercentage}% of shop users
-                              </p>
-                            );
-                          }
-
-                          const percentageBetter = Math.round(
-                            ((avgMistakes - userMistakes) / avgMistakes) * 100
-                          );
-
-                          // Round to nearest milestone
-                          let displayPercentage;
-                          if (percentageBetter >= 85) displayPercentage = 90;
-                          else if (percentageBetter >= 62.5)
-                            displayPercentage = 75;
-                          else if (percentageBetter >= 37.5)
-                            displayPercentage = 50;
-                          else if (percentageBetter >= 12.5)
-                            displayPercentage = 25;
-                          else displayPercentage = null;
-
-                          return displayPercentage ? (
-                            <p className="text-xl font-bold text-gray-900">
-                              than {displayPercentage}% of shop users
-                            </p>
-                          ) : null;
-                        })()}
+                      <p className="text-sm text-gray-500 mt-1">
+                        {mistakes === 0 ? "Perfect!" : 
+                         mistakes === 1 ? "Great job!" : 
+                         mistakes === 2 ? "Good effort!" : 
+                         mistakes === 3 ? "Close call!" : "Next time!"}
+                      </p>
                     </div>
 
-                    {/* Guesses Component */}
+                    {/* Total Guesses Component */}
                     <div className="bg-white rounded-lg p-6 border aspect-square flex flex-col justify-center w-[240px] h-[240px] mx-5 flex-shrink-0 shadow-sm">
                       <span className="text-5xl pb-4">🧐</span>
-                      <p className="text-2xl font-bold mb-2">Smarter than</p>
-                      {gameStats &&
-                        (() => {
-                          // Estimate average guesses based on completion rate and game data
-                          const avgGuesses = Math.round(
-                            6 + (100 - (gameStats.completion_rate || 50)) / 10
-                          );
-                          const userGuesses = totalGuesses;
-                          if (userGuesses >= avgGuesses) return null; // Only show if better than average
-
-                          const percentageBetter = Math.round(
-                            ((avgGuesses - userGuesses) / avgGuesses) * 100
-                          );
-
-                          // Round to nearest milestone
-                          let displayPercentage;
-                          if (percentageBetter >= 85) displayPercentage = 90;
-                          else if (percentageBetter >= 62.5)
-                            displayPercentage = 75;
-                          else if (percentageBetter >= 37.5)
-                            displayPercentage = 50;
-                          else if (percentageBetter >= 12.5)
-                            displayPercentage = 25;
-                          else displayPercentage = null;
-
-                          return displayPercentage ? (
-                            <p className="text-xl font-bold text-gray-900">
-                              {displayPercentage}% of shop users
-                            </p>
-                          ) : null;
-                        })()}
+                      <p className="text-2xl font-bold mb-2">Total Guesses</p>
+                      <p className="text-xl font-bold text-gray-900">
+                        {totalGuesses} guesses
+                      </p>
+                      <p className="text-sm text-gray-500 mt-1">
+                        This round
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -412,14 +348,14 @@ export default function ConnectionsResults({
                   className={`w-2 h-2 rounded-full transition-colors ${
                     2 === currentIndex ? "bg-blue-600" : "bg-gray-300"
                   }`}
-                  aria-label="Go to Mistakes stat"
+                  aria-label="Go to Lives Remaining stat"
                 />
                 <button
                   onClick={() => setCurrentIndex(3)}
                   className={`w-2 h-2 rounded-full transition-colors ${
                     3 === currentIndex ? "bg-blue-600" : "bg-gray-300"
                   }`}
-                  aria-label="Go to Guesses stat"
+                  aria-label="Go to Total Guesses stat"
                 />
               </div>
             </>
@@ -427,16 +363,6 @@ export default function ConnectionsResults({
 
           {/* Action buttons */}
           <div className="space-y-3">
-            {/* Share */}
-            <Button
-              onClick={() => {
-                navigator.clipboard.writeText(shareText);
-              }}
-              className="w-full"
-              variant="outline"
-            >
-              Share Results
-            </Button>
 
             {/* View Game Items */}
             <Button

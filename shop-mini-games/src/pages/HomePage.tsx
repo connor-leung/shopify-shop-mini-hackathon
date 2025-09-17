@@ -1,5 +1,5 @@
-import { usePopularProducts, ProductCard } from "@shopify/shop-minis-react";
 import { Button } from "../components/Button";
+import { IMAGE_URLS } from "../config/imageUrls";
 
 interface HomePageProps {
   onNavigate: (page: string) => void;
@@ -13,8 +13,8 @@ export function HomePage({ onNavigate }: HomePageProps) {
     >
       <div className="flex justify-center mb-6 animate-[fadeInUp_0.6s_ease-out]">
         <img
-          src="https://i.postimg.cc/wjTdTDJM/logo.png"
-          alt="logo"
+          src={IMAGE_URLS.logo}
+          alt="Mini Link Logo"
           className="max-w-1/2 h-auto"
         />
       </div>
