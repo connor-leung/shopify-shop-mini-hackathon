@@ -1,4 +1,5 @@
 import { useGenerateQuestionWithMultipleSearches, Difficulty } from './generateQuestions'
+import { useMemo } from 'react'
 
 export interface GameCategory {
   difficulty: Difficulty
@@ -12,7 +13,19 @@ export interface UseGenerateGameDataResult {
   categories: GameCategory[]
 }
 
-// Generates one question for each difficulty level. Useful for the Connections game.
+function filterUniqueItems(
+  items: Array<{ id: string; product: any }>, 
+  usedIds: Set<string>
+): Array<{ id: string; product: any }> {
+  return items.filter(item => {
+    if (usedIds.has(item.id)) {
+      return false
+    }
+    usedIds.add(item.id)
+    return true
+  })
+}
+
 export function useGenerateGameData(): UseGenerateGameDataResult {
   const easy = useGenerateQuestionWithMultipleSearches('easy')
   const medium = useGenerateQuestionWithMultipleSearches('medium')
@@ -20,31 +33,38 @@ export function useGenerateGameData(): UseGenerateGameDataResult {
   const expert = useGenerateQuestionWithMultipleSearches('expert')
 
   const loading = easy.loading || medium.loading || hard.loading || expert.loading
-  // Prefer the first truthy error
   const error = easy.error || medium.error || hard.error || expert.error || null
 
-  const categories: GameCategory[] = loading || error ? [] : [
-    {
-      difficulty: 'easy',
-      category: easy.category,
-      items: easy.items,
-    },
-    {
-      difficulty: 'medium',
-      category: medium.category,
-      items: medium.items,
-    },
-    {
-      difficulty: 'hard',
-      category: hard.category,
-      items: hard.items,
-    },
-    {
-      difficulty: 'expert',
-      category: expert.category,
-      items: expert.items,
-    },
-  ]
+  const categories: GameCategory[] = useMemo(() => {
+    if (loading || error) return []
+    
+    const usedIds = new Set<string>()
+    const processedCategories: GameCategory[] = []
+    
+    const categoryData = [
+      { difficulty: 'easy' as Difficulty, data: easy },
+      { difficulty: 'medium' as Difficulty, data: medium },
+      { difficulty: 'hard' as Difficulty, data: hard },
+      { difficulty: 'expert' as Difficulty, data: expert },
+    ]
+    
+    for (const { difficulty, data } of categoryData) {
+      if (data.items && data.items.length > 0) {
+        const uniqueItems = filterUniqueItems(data.items, usedIds)
+        
+        if (uniqueItems.length >= 3) {
+          processedCategories.push({
+            difficulty,
+            category: data.category,
+            items: uniqueItems.slice(0, 4), 
+          })
+        }
+      }
+    }
+    
+    return processedCategories
+  }, [loading, error, easy.items, medium.items, hard.items, expert.items, 
+      easy.category, medium.category, hard.category, expert.category])
 
   return { loading, error, categories }
 }

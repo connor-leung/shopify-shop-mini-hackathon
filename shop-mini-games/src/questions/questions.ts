@@ -1,51 +1,63 @@
 export const easy = [
-    {"Drinkware": ['mug', 'bottle', 'tumbler', 'cup']},
-    {"Footwear": ['boots', 'sandals', 'loafers', 'sneakers']},
-    {"Accessories (basic)": ['hat', 'belt', 'scarf', 'gloves']},
-    {"Home textiles": ['blanket', 'towel', 'curtain', 'rug']},
-    {"Audio gear": ['headphones', 'earbuds', 'microphone', 'soundbar']},
-    {"Kids & toys": ['puzzle', 'plush', 'blocks', 'doll']},
-    {"Home fragrance": ['candle', 'diffuser', 'incense', 'room spray']},
-    {"Food/drink containers": ['bottle', 'jar', 'canister', 'lunchbox']},
-    {"Cleaning tools": ['sponge', 'mop', 'brush', 'duster']},
-    {"Mobile accessories": ['case', 'charger', 'cable', 'screen protector']}
-]
+    {"Drinkware": ["mug", "tumbler", "cup", "water bottle"]},
+    {"Footwear": ["boots", "sandals", "loafers", "sneakers"]},
+    {"Accessories": ["hat", "belt", "scarf", "gloves"]},
+    {"Home Textiles": ["blanket", "towel", "curtain", "rug"]},
+    {"Audio Gear": ["headphones", "earbuds", "microphone", "speaker"]},
+    {"Toys": ["puzzle", "plush toy", "blocks", "doll"]},
+    {"Fragrance": ["candle", "diffuser", "incense", "room spray"]},
+    {"Food Storage": ["jar", "canister", "lunchbox", "thermos"]},
+    {"Cleaning Tools": ["sponge", "mop", "brush", "duster"]},
+    {"Phone Accessories": ["case", "charger", "cable", "screen protector"]}
+  ];
 
-export const medium = [
-    {"Starts with “sh”": ['shirt', 'shawl', 'shoes', 'shampoo']},
-    {"Ends with “-er”": ['charger', 'blender', 'steamer', 'toaster']},
-    {"Starts with a vowel": ['umbrella', 'apron', 'adapter', 'incense']},
-    {"Starts with “br”": ['bracelet', 'brush', 'brogue', 'bralette']},
-    {"Starts with “co”": ['coat', 'cologne', 'comb', 'conditioner']},
-    {"Ends with “case”": ['suitcase', 'briefcase', 'pillowcase', 'phone case']},
-    {"Starts with “to”": ['toaster', 'toner', 'tote', 'toothbrush']},
-    {"Starts with “bl”": ['blazer', 'blender', 'blanket', 'blocks']},
-    {"Starts with “sa”": ['sandals', 'satchel', 'sanitizer', 'saucepan']},
-    {"Exactly 5 letters": ['dress', 'shoes', 'skirt', 'towel']}
-]
+  export const medium = [
+    {"Travel Accessories": ["suitcase", "backpack", "passport holder", "duffel bag"]},
+    {"Kitchen Tools": ["spatula", "whisk", "peeler", "tongs"]},
+    {"Stationery": ["notebook", "planner", "pen", "sticky notes"]},
+    {"Home Decor": ["vase", "wall art", "throw pillow", "picture frame"]},
+    {"Sports Gear": ["basketball", "soccer ball", "tennis racket", "baseball glove"]},
+    {"Fitness Equipment": ["yoga mat", "resistance band", "jump rope", "dumbbell"]},
+    {"Pet Supplies": ["leash", "collar", "pet bed", "cat toy"]},
+    {"Beauty Products": ["lipstick", "foundation", "perfume", "nail polish"]},
+    {"Furniture": ["chair", "table", "sofa", "bookshelf"]},
+    {"Jewelry": ["ring", "necklace", "bracelet", "earrings"]}
+  ];
 
-export const hard = [
-    {"Skincare routine items": ['cleanser', 'toner', 'serum', 'moisturizer']},
-    {"Carry items": ['backpack', 'tote', 'duffle', 'suitcase']},
-    {"Kitchen tools/tableware": ['plate', 'bowl', 'knife', 'peeler']},
-    {"Baby/kids items": ['onesie', 'stroller', 'rattle', 'bib']},
-    {"Garden/outdoor gear": ['planter', 'hammock', 'lantern', 'cooler']},
-    {"Travel kit essentials": ['passport holder', 'toiletry bag', 'travel pillow', 'luggage tag']},
-    {"Office/stationery": ['notebook', 'planner', 'journal', 'marker']},
-    {"Exercise gear": ['dumbbell', 'yoga mat', 'kettlebell', 'jump rope']},
-    {"Sleep items": ['pillow', 'duvet', 'mattress', 'pajamas']},
-    {"Cold-weather wearables": ['parka', 'beanie', 'scarf', 'balaclava']}
-]
+  export const hard = [
+    {"Skincare Routine": ["cleanser", "toner", "serum", "moisturizer"]},
+    {"Baby Essentials": ["stroller", "onesie", "bib", "rattle"]},
+    {"Camping Gear": ["tent", "sleeping bag", "lantern", "camp stove"]},
+    {"Office Setup": ["desk lamp", "keyboard", "monitor", "mouse"]},
+    {"Kitchen Appliances": ["blender", "toaster", "coffee maker", "air fryer"]},
+    {"Sleep Items": ["pillow", "duvet", "sleep mask", "mattress topper"]}, // removed pajamas (duplicate in expert)
+    {"Luxury Accessories": ["watch", "silk scarf", "sunglasses", "leather belt"]},
+    {"Outdoor Living": ["hammock", "planter", "cooler", "patio chair"]},
+    {"Travel Comfort": ["neck pillow", "toiletry bag", "luggage tag", "eye mask"]},
+    {"Board Games": ["chess set", "monopoly", "jenga", "scrabble"]},
+    {"Bathroom Items": ["bath towel", "bathrobe", "soap dispenser", "toothbrush"]},
+    {"Garden Gear": ["watering can", "shovel", "rake", "garden gloves"]}
+  ];
 
-export const expert = [
-    {"Plural-only nouns": ['jeans', 'leggings', 'sunglasses', 'pajamas']},
-    {"Also common verbs": ['comb', 'brush', 'mask', 'wrap']},
-    {"Contains double letters": ['hoodie', 'wallet', 'earrings', 'scooter']},
-    {"Hyphenated types": ['t-shirt', 'long-sleeve', 'cross-body', 'one-piece']},
-    {"Typically sold as pairs": ['socks', 'shoes', 'chopsticks', 'earplugs']},
-    {"Plural-only/collective forms": ['pants', 'scissors', 'glasses', 'binoculars']},
-    {"Contains “wear”": ['underwear', 'outerwear', 'sportswear', 'knitwear']},
-    {"Clothing/non-clothing homonyms": ['tank', 'mule', 'cape', 'wrap']},
-    {"Ends with “ware”": ['cookware', 'glassware', 'tableware', 'silverware']},
-    {"Contains a body-part word": ['headband', 'handbag', 'earring', 'shoulder bag']}
-]
+  export const expert = [
+    {"Specialty Footwear": ["oxfords", "clogs", "loafers", "heels"]},
+    {"Cycling Gear": ["helmet", "bike lock", "water bottle cage", "cycling jersey"]},
+    {"Luxury Bags": ["satchel", "clutch", "crossbody bag", "weekender"]},
+    {"Craft Supplies": ["yarn", "paint set", "sketchbook", "embroidery kit"]},
+    {"Lighting": ["floor lamp", "desk lamp", "pendant light", "string lights"]},
+    {"Audio Equipment": ["turntable", "studio mic", "amp", "soundbar"]},
+    {"Kitchen Storage": ["spice rack", "bread box", "wine rack", "food container"]},
+    {"Seasonal Items": ["Christmas ornament", "holiday wreath", "gift wrap", "costume"]},
+    {"Home Tech": ["robot vacuum", "smart speaker", "air purifier", "wifi router"]},
+    {"Musical Instruments": ["guitar", "keyboard", "drum set", "violin"]},
+    {"Plural-only Nouns": ["jeans", "leggings", "sunglasses", "pajamas"]},
+    {"Also Common Verbs": ["comb", "brush", "mask", "wrap"]},
+    {"Contains Double Letters": ["hoodie", "wallet", "earrings", "scooter"]},
+    {"Hyphenated Types": ["t-shirt", "long-sleeve", "cross-body", "one-piece"]},
+    {"Sold as Pairs": ["socks", "shoes", "chopsticks", "earplugs"]},
+    {"Collective Forms": ["pants", "scissors", "glasses", "binoculars"]},
+    {"Contains “wear”": ["underwear", "outerwear", "sportswear", "knitwear"]},
+    {"Clothing/Non-clothing Homonyms": ["tank", "mule", "cape", "wrap"]},
+    {"Ends with “ware”": ["cookware", "glassware", "tableware", "silverware"]},
+    {"Body-part Words": ["headband", "handbag", "earring", "shoulder bag"]}
+  ];
