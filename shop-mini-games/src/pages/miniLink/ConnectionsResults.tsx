@@ -3,14 +3,13 @@ import { GameResults } from "./ConnectionsGame";
 import {
   getUserId,
   UserStats,
-  GameStats,
-  LeaderboardResponse,
-} from "../../utils/api";
-import {
+  PersonalStats,
   updateLocalStats,
   createProgressData,
   submitGameResults,
   createShareText,
+  getLivesComparedToAverage,
+  isNewPersonalRecord,
 } from "../../utils/connectionsStats";
 import { Button } from "../../components/Button";
 
@@ -60,43 +59,12 @@ export default function ConnectionsResults({
   const { won, mistakes, elapsedSeconds, totalGuesses, solvedCategories } =
     results;
   const [userStats, setUserStats] = useState<UserStats | null>(null);
-  const [gameStats, setGameStats] = useState<GameStats | null>(null);
-  const [leaderboard, setLeaderboard] = useState<LeaderboardResponse | null>(
-    null
-  );
+  const [personalStats, setPersonalStats] = useState<PersonalStats | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Confetti state
   const [showConfetti, setShowConfetti] = useState(false);
 
-  // Helper function to calculate speed percentage
-  const getSpeedPercentage = () => {
-    if (
-      !gameStats ||
-      !gameStats.average_completion_time ||
-      gameStats.average_completion_time <= 0
-    ) {
-      return null;
-    }
-
-    const averageTime = gameStats.average_completion_time;
-    const userTime = elapsedSeconds;
-
-    if (userTime >= averageTime) {
-      return null; // User is not faster
-    }
-
-    const percentageFaster = Math.round(
-      ((averageTime - userTime) / averageTime) * 100
-    );
-
-    // Round to nearest milestone: 25%, 50%, 75%, or 90%
-    if (percentageFaster >= 85) return 90;
-    if (percentageFaster >= 62.5) return 75;
-    if (percentageFaster >= 37.5) return 50;
-    if (percentageFaster >= 12.5) return 25;
-    return null;
-  };
 
   // Carousel state
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -118,6 +86,8 @@ export default function ConnectionsResults({
       }, 4000);
       return () => clearTimeout(timer);
     }
+    // Return undefined when won is false
+    return undefined;
   }, [won]);
 
   // Persist lifetime stats and submit to backend
@@ -138,40 +108,17 @@ export default function ConnectionsResults({
           mistakes
         );
 
-        // Submit to backend and fetch all related data
-        const { userStats, gameStats, leaderboard } = await submitGameResults(
+        // Process local data
+        const { userStats, personalStats } = await submitGameResults(
           progressData
         );
 
-        // Update component state with fetched data
+        // Update component state with processed data
         setUserStats(userStats);
-        setGameStats(gameStats);
-        setLeaderboard(leaderboard);
+        setPersonalStats(personalStats);
       } catch (error) {
-        // Server failed, use mock data
-        const mockUserStats: UserStats = {
-          user_id: userId,
-          total_games_played: Math.floor(Math.random() * 10) + 5,
-          best_time: Math.floor(Math.random() * 30) + 15,
-          average_time: Math.floor(Math.random() * 20) + 35,
-          average_lives_remaining: Math.random() * 2 + 1,
-          total_score: Math.floor(Math.random() * 100) + 50,
-          current_streak: Math.floor(Math.random() * 5) + 1,
-          longest_streak: Math.floor(Math.random() * 10) + 3,
-          last_played: new Date().toISOString(),
-        };
-
-        const mockGameStats: GameStats = {
-          total_players: 247,
-          average_completion_time: 45,
-          average_lives_remaining: 2.1,
-          total_games_played: 1842,
-          completion_rate: 68,
-        };
-
-        setUserStats(mockUserStats);
-        setGameStats(mockGameStats);
-        setLeaderboard(null);
+        // Since we're using local storage only, this shouldn't happen
+        console.error("Error processing local data:", error);
       } finally {
         setIsSubmitting(false);
       }
@@ -249,10 +196,10 @@ export default function ConnectionsResults({
             <div className="flex flex-col">
               <span className="text-3xl font-bold pb-2">On fire! 🎉</span>
               <span>
-                Today's avg:{" "}
-                {gameStats?.average_completion_time
-                  ? `${Math.round(gameStats.average_completion_time)}s`
-                  : "Loading..."}
+                Your avg:{" "}
+                {userStats?.average_time
+                  ? `${Math.round(userStats.average_time)}s`
+                  : "First win!"}
               </span>
             </div>
           </h1>
@@ -283,18 +230,28 @@ export default function ConnectionsResults({
                     {/* Streaks Component - NEW FIRST COMPONENT */}
                     <div className="bg-white rounded-lg p-6 border aspect-square flex flex-col justify-center w-[240px] h-[240px] mx-5 flex-shrink-0 shadow-sm">
                       <span className="text-5xl pb-4">🔥</span>
-                      <p className="text-2xl font-bold mb-2">Current Streak</p>
-                      <p className="text-xl font-bold text-gray-900">
+                      <p className="text-2xl font-bold mb-2">
+                        {won ? "Streak Extended!" : "Current Streak"}
+                      </p>
+                      <p className={`text-xl font-bold ${won ? "text-orange-600" : "text-gray-900"}`}>
                         {`${userStats?.current_streak || 0}-day streak`}
                       </p>
+                      {userStats && userStats.longest_streak > userStats.current_streak && (
+                        <p className="text-sm text-gray-500 mt-1">
+                          Best: {userStats.longest_streak} days
+                        </p>
+                      )}
                     </div>
 
                     {/* Time Component */}
                     <div className="bg-white rounded-lg p-6 border aspect-square flex flex-col justify-center w-[240px] h-[240px] mx-5 flex-shrink-0 shadow-sm">
                       <span className="text-5xl pb-4">⏱️</span>
-                      <p className="text-2xl font-bold mb-2">Elapsed Time</p>
-                      <p className="text-xl font-bold text-gray-900">
+                      <p className="text-2xl font-bold mb-2">
+                        {isNewPersonalRecord(elapsedSeconds) && won ? "New Record!" : "Elapsed Time"}
+                      </p>
+                      <p className={`text-xl font-bold ${isNewPersonalRecord(elapsedSeconds) && won ? "text-yellow-600" : "text-gray-900"}`}>
                         {elapsedSeconds}s
+                        {isNewPersonalRecord(elapsedSeconds) && won && " 🏆"}
                       </p>
                     </div>
 
