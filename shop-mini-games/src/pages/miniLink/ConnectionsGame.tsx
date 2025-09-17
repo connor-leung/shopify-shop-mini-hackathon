@@ -490,8 +490,8 @@ export default function ConnectionsGame({ onFinish, onBack }: ConnectionsGamePro
           background: "linear-gradient(to bottom, #FAFAFA,rgb(233, 228, 255))",
         }}
       >
-        {/* Back Button */}
-        {onBack && (
+        {/* Back Button - only show during gameplay, not when showing answers */}
+        {onBack && !showingAnswers && (
           <BackButton
             onClick={onBack}
             variant="floating"

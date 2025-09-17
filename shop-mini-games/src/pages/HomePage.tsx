@@ -11,7 +11,7 @@ export function HomePage({ onNavigate }: HomePageProps) {
       className="min-h-screen pt-12 px-4 pb-6 flex flex-col items-center justify-center"
       style={{ background: "linear-gradient(to bottom, #FAFAFA, #EEEAFF)" }}
     >
-      <div className="flex justify-center mb-6 animate-[fadeInUp_1.2s_ease-out]">
+      <div className="flex justify-center mb-6 animate-[fadeInUp_0.6s_ease-out]">
         <img
           src="https://i.postimg.cc/wjTdTDJM/logo.png"
           alt="logo"
@@ -19,10 +19,10 @@ export function HomePage({ onNavigate }: HomePageProps) {
         />
       </div>
 
-      <h1 className="text-3xl font-bold mb-2 text-center animate-[fadeInUp_1.2s_ease-out_0.3s_both]">
+      <h1 className="text-3xl font-bold mb-2 text-center animate-[fadeInUp_0.6s_ease-out_0.1s_both]">
         Mini Link
       </h1>
-      <span className="text-center text-gray-500 mb-6 w-3/4 animate-[fadeInUp_1.2s_ease-out_0.6s_both]">
+      <span className="text-center text-gray-500 mb-6 w-3/4 animate-[fadeInUp_0.6s_ease-out_0.2s_both]">
         {" "}
         Group together Shop items by their hidden link!
       </span>
@@ -31,7 +31,7 @@ export function HomePage({ onNavigate }: HomePageProps) {
           onClick={() => onNavigate("connections-game")}
           variant="primary"
           size="medium"
-          className="w-full animate-[fadeInUp_1.2s_ease-out_1.2s_both]"
+          className="w-full animate-[fadeInUp_0.6s_ease-out_0.3s_both]"
         >
           <span className="font-bold">Play Now</span>
         </Button>
@@ -39,7 +39,7 @@ export function HomePage({ onNavigate }: HomePageProps) {
           onClick={() => onNavigate("connections-intro")}
           variant="outline"
           size="medium"
-          className="w-full animate-[fadeInUp_1.2s_ease-out_1.5s_both]"
+          className="w-full animate-[fadeInUp_0.6s_ease-out_0.4s_both]"
         >
           <span className="font-bold">How to Play</span>
         </Button>
