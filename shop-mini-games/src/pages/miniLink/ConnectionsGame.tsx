@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useGenerateGameData } from "../../utils/useGenerateGameData";
 import { BackButton } from "../../components/BackButton";
+import { getLivesImageUrl } from "../../config/imageUrls";
 
 // Add difficulty color palette constant after imports
 const DIFFICULTY_COLORS: Record<string, { fill: string; stroke: string }> = {
@@ -682,17 +683,7 @@ export default function ConnectionsGame({ onFinish, onBack }: ConnectionsGamePro
           {!showingAnswers && (
             <div className="text-center">
               <img
-                src={`https://i.postimg.cc/${
-                  remainingLives === 0
-                    ? "CB3vzsr5/Property-1-0"
-                    : remainingLives === 1
-                    ? "3k1bnpNf/Property-1-1"
-                    : remainingLives === 2
-                    ? "06HXqspp/Property-1-2"
-                    : remainingLives === 3
-                    ? "FddWrBZw/Property-1-3"
-                    : "94fgSMqm/Property-1-4"
-                }.png`}
+                src={getLivesImageUrl(remainingLives)}
                 alt={`${remainingLives} lives remaining`}
                 className="h-6 w-auto mx-auto"
               />

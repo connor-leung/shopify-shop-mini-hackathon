@@ -255,63 +255,31 @@ export default function ConnectionsResults({
                       </p>
                     </div>
 
-                    {/* Lives vs Personal Average Component */}
+                    {/* Lives Remaining Component */}
                     <div className="bg-white rounded-lg p-6 border aspect-square flex flex-col justify-center w-[240px] h-[240px] mx-5 flex-shrink-0 shadow-sm">
                       <span className="text-5xl pb-4">⚡️</span>
-                      <p className="text-2xl font-bold mb-2">
-                        Lives vs Your Average
+                      <p className="text-2xl font-bold mb-2">Lives Remaining</p>
+                      <p className="text-xl font-bold text-gray-900">
+                        {4 - mistakes} out of 4
                       </p>
-                      {(() => {
-                        const currentLives = 4 - mistakes;
-                        const livesComparison = getLivesComparedToAverage(currentLives);
-                        
-                        if (livesComparison.difference === null) {
-                          return (
-                            <p className="text-xl font-bold text-gray-900">
-                              {currentLives} lives remaining
-                            </p>
-                          );
-                        }
-                        
-                        if (livesComparison.isAboveAverage) {
-                          return (
-                            <p className="text-xl font-bold text-green-600">
-                              +{livesComparison.difference} above your average!
-                            </p>
-                          );
-                        } else if (livesComparison.difference < 0) {
-                          return (
-                            <p className="text-xl font-bold text-orange-600">
-                              {livesComparison.difference} vs your average
-                            </p>
-                          );
-                        } else {
-                          return (
-                            <p className="text-xl font-bold text-gray-900">
-                              Exactly your average!
-                            </p>
-                          );
-                        }
-                      })()}
+                      <p className="text-sm text-gray-500 mt-1">
+                        {mistakes === 0 ? "Perfect!" : 
+                         mistakes === 1 ? "Great job!" : 
+                         mistakes === 2 ? "Good effort!" : 
+                         mistakes === 3 ? "Close call!" : "Next time!"}
+                      </p>
                     </div>
 
-                    {/* Personal Progress Component */}
+                    {/* Total Guesses Component */}
                     <div className="bg-white rounded-lg p-6 border aspect-square flex flex-col justify-center w-[240px] h-[240px] mx-5 flex-shrink-0 shadow-sm">
-                      <span className="text-5xl pb-4">📊</span>
-                      <p className="text-2xl font-bold mb-2">Win Rate</p>
-                        {personalStats && (
-                        <p className="text-xl font-bold text-gray-900">
-                          {personalStats.total_games_played > 0 ? 
-                            `${personalStats.completion_rate}%` :
-                            "Play more!"
-                          }
-                        </p>
-                      )}
-                      {personalStats && personalStats.total_games_played > 0 && (
-                        <p className="text-sm text-gray-500 mt-1">
-                          {personalStats.total_games_played} games played
-                        </p>
-                      )}
+                      <span className="text-5xl pb-4">🧐</span>
+                      <p className="text-2xl font-bold mb-2">Total Guesses</p>
+                      <p className="text-xl font-bold text-gray-900">
+                        {totalGuesses} guesses
+                      </p>
+                      <p className="text-sm text-gray-500 mt-1">
+                        This round
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -337,14 +305,14 @@ export default function ConnectionsResults({
                   className={`w-2 h-2 rounded-full transition-colors ${
                     2 === currentIndex ? "bg-blue-600" : "bg-gray-300"
                   }`}
-                  aria-label="Go to Mistakes stat"
+                  aria-label="Go to Lives Remaining stat"
                 />
                 <button
                   onClick={() => setCurrentIndex(3)}
                   className={`w-2 h-2 rounded-full transition-colors ${
                     3 === currentIndex ? "bg-blue-600" : "bg-gray-300"
                   }`}
-                  aria-label="Go to Win Rate stat"
+                  aria-label="Go to Total Guesses stat"
                 />
               </div>
             </>

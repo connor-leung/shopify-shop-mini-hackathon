@@ -4,31 +4,10 @@ export interface LifetimeStats {
   totalTime: number; // seconds
   totalMistakes: number;
   totalGuesses: number;
-  successfulAttempts: Array<{
-    completionTime: number;
-    livesRemaining: number;
-    mistakes: number;
-    date: string;
-  }>;
-}
-
-export interface UserStats {
-  user_id: string;
-  total_games_played: number;
-  best_time?: number;
-  average_time?: number;
-  average_lives_remaining?: number;
-  total_score: number;
-  current_streak: number;
-  longest_streak: number;
-  last_played?: string;
-}
-
-export interface PersonalStats {
-  average_completion_time: number;
-  average_lives_remaining: number;
-  total_games_played: number;
-  completion_rate: number;
+  winDates: string[]; // Array of dates (YYYY-MM-DD) when user won
+  currentStreak: number;
+  longestStreak: number;
+  fastestTime: number | null; // fastest completion time in seconds
 }
 
 export interface ProgressData {
@@ -46,14 +25,29 @@ export interface ProgressData {
 export function loadStats(): LifetimeStats {
   console.log("📖 ConnectionsResults: Loading local stats from localStorage");
   const stored = localStorage.getItem("connections-stats");
-  
-  const defaultStats: LifetimeStats = {
+  if (stored) {
+    const parsedStats = JSON.parse(stored);
+    console.log("✅ ConnectionsResults: Local stats found:", parsedStats);
+    
+    // Ensure backward compatibility - add new fields if they don't exist
+    if (!parsedStats.winDates) parsedStats.winDates = [];
+    if (parsedStats.currentStreak === undefined) parsedStats.currentStreak = 0;
+    if (parsedStats.longestStreak === undefined) parsedStats.longestStreak = 0;
+    if (parsedStats.fastestTime === undefined) parsedStats.fastestTime = null;
+    
+    return parsedStats;
+  }
+  console.log("📝 ConnectionsResults: No local stats found, using defaults");
+  return {
     gamesPlayed: 0,
     gamesWon: 0,
     totalTime: 0,
     totalMistakes: 0,
     totalGuesses: 0,
-    successfulAttempts: [],
+    winDates: [],
+    currentStreak: 0,
+    longestStreak: 0,
+    fastestTime: null,
   };
   
   if (stored) {
@@ -90,6 +84,88 @@ export function saveStats(stats: LifetimeStats) {
 }
 
 /**
+ * Get today's date as YYYY-MM-DD string
+ */
+function getTodayDateString(): string {
+  return new Date().toISOString().split('T')[0];
+}
+
+/**
+ * Get yesterday's date as YYYY-MM-DD string
+ */
+function getYesterdayDateString(): string {
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  return yesterday.toISOString().split('T')[0];
+}
+
+/**
+ * Calculate current streak based on consecutive win dates
+ */
+function calculateCurrentStreak(winDates: string[]): number {
+  if (winDates.length === 0) return 0;
+  
+  // Sort dates in descending order (most recent first)
+  const sortedDates = [...winDates].sort().reverse();
+  const today = getTodayDateString();
+  const yesterday = getYesterdayDateString();
+  
+  let currentStreak = 0;
+  let expectedDate = today;
+  
+  // If the most recent win wasn't today, check if it was yesterday
+  if (sortedDates[0] !== today) {
+    if (sortedDates[0] !== yesterday) {
+      return 0; // Streak is broken if last win wasn't today or yesterday
+    }
+    expectedDate = yesterday;
+  }
+  
+  // Count consecutive days working backwards
+  for (const winDate of sortedDates) {
+    if (winDate === expectedDate) {
+      currentStreak++;
+      // Move to previous day
+      const prevDate = new Date(expectedDate);
+      prevDate.setDate(prevDate.getDate() - 1);
+      expectedDate = prevDate.toISOString().split('T')[0];
+    } else {
+      break; // Streak is broken
+    }
+  }
+  
+  return currentStreak;
+}
+
+/**
+ * Calculate longest streak from win dates
+ */
+function calculateLongestStreak(winDates: string[]): number {
+  if (winDates.length === 0) return 0;
+  
+  const sortedDates = [...winDates].sort();
+  let longestStreak = 1;
+  let currentStreak = 1;
+  
+  for (let i = 1; i < sortedDates.length; i++) {
+    const prevDate = new Date(sortedDates[i - 1]);
+    const currentDate = new Date(sortedDates[i]);
+    const dayDifference = (currentDate.getTime() - prevDate.getTime()) / (1000 * 60 * 60 * 24);
+    
+    if (dayDifference === 1) {
+      // Consecutive day
+      currentStreak++;
+      longestStreak = Math.max(longestStreak, currentStreak);
+    } else {
+      // Reset streak
+      currentStreak = 1;
+    }
+  }
+  
+  return longestStreak;
+}
+
+/**
  * Update local stats with new game results
  */
 export function updateLocalStats(
@@ -103,27 +179,35 @@ export function updateLocalStats(
   console.log("📊 ConnectionsResults: Current local stats:", stats);
 
   stats.gamesPlayed += 1;
-  if (won) {
-    stats.gamesWon += 1;
-    
-    // Add to successful attempts for future comparisons
-    const livesRemaining = Math.max(0, 4 - mistakes);
-    stats.successfulAttempts.push({
-      completionTime: elapsedSeconds,
-      livesRemaining,
-      mistakes,
-      date: new Date().toISOString(),
-    });
-    
-    // Keep only the last 50 successful attempts to avoid storage bloat
-    if (stats.successfulAttempts.length > 50) {
-      stats.successfulAttempts = stats.successfulAttempts.slice(-50);
-    }
-  }
-  
   stats.totalTime += elapsedSeconds;
   stats.totalMistakes += mistakes;
   stats.totalGuesses += totalGuesses;
+  
+  if (won) {
+    stats.gamesWon += 1;
+    
+    // Update fastest time
+    if (stats.fastestTime === null || elapsedSeconds < stats.fastestTime) {
+      stats.fastestTime = elapsedSeconds;
+      console.log("🎯 ConnectionsResults: New personal best time:", elapsedSeconds);
+    }
+    
+    // Add today's date to win dates (only if not already added today)
+    const today = getTodayDateString();
+    if (!stats.winDates.includes(today)) {
+      stats.winDates.push(today);
+      console.log("📅 ConnectionsResults: Added win date:", today);
+      
+      // Recalculate streaks
+      stats.currentStreak = calculateCurrentStreak(stats.winDates);
+      stats.longestStreak = Math.max(stats.longestStreak, calculateLongestStreak(stats.winDates));
+      
+      console.log("🔥 ConnectionsResults: Current streak:", stats.currentStreak);
+      console.log("🏆 ConnectionsResults: Longest streak:", stats.longestStreak);
+    } else {
+      console.log("📅 ConnectionsResults: Already won today, streak unchanged");
+    }
+  }
   
   saveStats(stats);
   console.log("✅ ConnectionsResults: Updated local stats:", stats);
@@ -364,6 +448,61 @@ export function getCurrentStreak(): { current: number; longest: number } {
     current: currentStreak,
     longest: longestStreak
   };
+}
+
+/**
+ * Get current streak from stats
+ */
+export function getCurrentStreak(): number {
+  const stats = loadStats();
+  return stats.currentStreak;
+}
+
+/**
+ * Get longest streak from stats
+ */
+export function getLongestStreak(): number {
+  const stats = loadStats();
+  return stats.longestStreak;
+}
+
+/**
+ * Get fastest time from stats
+ */
+export function getFastestTime(): number | null {
+  const stats = loadStats();
+  return stats.fastestTime;
+}
+
+/**
+ * Get personal average lives remaining from past wins
+ */
+export function getAverageLivesRemaining(): number {
+  const stats = loadStats();
+  if (stats.gamesWon === 0) return 0;
+  
+  // Calculate average mistakes per win, then convert to lives
+  const avgMistakes = stats.totalMistakes / stats.gamesWon;
+  const avgLives = Math.max(0, 4 - avgMistakes);
+  return Math.round(avgLives * 10) / 10; // Round to 1 decimal place
+}
+
+/**
+ * Get win rate percentage
+ */
+export function getWinRate(): number {
+  const stats = loadStats();
+  if (stats.gamesPlayed === 0) return 0;
+  return Math.round((stats.gamesWon / stats.gamesPlayed) * 100);
+}
+
+/**
+ * Get average completion time for wins
+ */
+export function getAverageWinTime(): number {
+  const stats = loadStats();
+  if (stats.gamesWon === 0) return 0;
+  return Math.round(stats.totalTime / stats.gamesWon);
 }
 
 /**
