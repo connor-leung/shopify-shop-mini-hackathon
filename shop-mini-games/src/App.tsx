@@ -50,7 +50,6 @@ export function App() {
           <GameItemsPage 
             results={results} 
             onNavigate={setCurrentPage} 
-            onBack={() => setCurrentPage("connections-results")}
           />
         );
 
