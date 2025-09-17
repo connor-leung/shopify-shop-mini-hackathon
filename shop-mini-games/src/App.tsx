@@ -31,6 +31,7 @@ export function App() {
               setResults(results);
               setCurrentPage("connections-results");
             }}
+            onBack={() => setCurrentPage("home")}
           />
         );
 
@@ -41,11 +42,18 @@ export function App() {
             onPlayAgain={() => setCurrentPage("connections-game")}
             onBackHome={() => setCurrentPage("home")}
             onNavigate={setCurrentPage}
+            onBack={() => setCurrentPage("connections-game")}
           />
         );
 
       case "game-items":
-        return <GameItemsPage results={results} onNavigate={setCurrentPage} />;
+        return (
+          <GameItemsPage 
+            results={results} 
+            onNavigate={setCurrentPage} 
+            onBack={() => setCurrentPage("connections-results")}
+          />
+        );
 
       default:
         return <HomePage onNavigate={setCurrentPage} />;
