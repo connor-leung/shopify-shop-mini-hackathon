@@ -1,8 +1,8 @@
 {
-  "name": "shop-mini-games",
+  "name": "mini-link",
   "private": true,
   "version": "0.0.1",
-  "description": "A Shop Mini with WebView and Vite",
+  "description": "Mini Link - A Shop Mini connections game",
   "main": "index.tsx",
   "scripts": {
     "start": "shop-minis dev"
