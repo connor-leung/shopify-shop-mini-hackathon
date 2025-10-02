@@ -420,14 +420,6 @@ export function getLivesComparedToAverage(currentLivesRemaining: number): {
   };
 }
 
-/**
- * Get current fastest time from local storage
- */
-export function getFastestTime(): number | null {
-  const fastestTimeKey = 'connections-fastest-time';
-  const fastest = localStorage.getItem(fastestTimeKey);
-  return fastest ? parseInt(fastest) : null;
-}
 
 /**
  * Check if current time is a new personal record
@@ -450,13 +442,6 @@ export function getCurrentStreak(): { current: number; longest: number } {
   };
 }
 
-/**
- * Get current streak from stats
- */
-export function getCurrentStreak(): number {
-  const stats = loadStats();
-  return stats.currentStreak;
-}
 
 /**
  * Get longest streak from stats
