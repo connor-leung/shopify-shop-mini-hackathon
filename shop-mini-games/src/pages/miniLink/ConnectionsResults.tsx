@@ -199,7 +199,7 @@ export default function ConnectionsResults({
                 Your avg:{" "}
                 {userStats?.average_time
                   ? `${Math.round(userStats.average_time)}s`
-                  : "First win!"}
+                  : `${elapsedSeconds}s`}
               </span>
             </div>
           </h1>

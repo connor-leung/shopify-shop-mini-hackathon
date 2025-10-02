@@ -1,3 +1,5 @@
+import { useAsyncStorage } from "@shopify/shop-minis-react";
+
 export interface LifetimeStats {
   gamesPlayed: number;
   gamesWon: number;
@@ -19,8 +21,120 @@ export interface ProgressData {
   game_type: string;
 }
 
+export interface UserStats {
+  user_id: string;
+  total_games_played: number;
+  best_time?: number;
+  average_time?: number;
+  average_lives_remaining?: number;
+  total_score: number;
+  current_streak: number;
+  longest_streak: number;
+  last_played: string;
+}
+
+export interface PersonalStats {
+  average_completion_time: number;
+  average_lives_remaining: number;
+  total_games_played: number;
+  completion_rate: number;
+}
+
 /**
- * Load lifetime stats from localStorage
+ * Default stats object
+ */
+const defaultStats: LifetimeStats = {
+  gamesPlayed: 0,
+  gamesWon: 0,
+  totalTime: 0,
+  totalMistakes: 0,
+  totalGuesses: 0,
+  winDates: [],
+  currentStreak: 0,
+  longestStreak: 0,
+  fastestTime: null,
+};
+
+/**
+ * Hook for managing lifetime stats with Shopify AsyncStorage
+ */
+export function useLifetimeStats() {
+  const { getItem, setItem } = useAsyncStorage();
+  
+  const loadStats = async (): Promise<LifetimeStats> => {
+    console.log("📖 ConnectionsResults: Loading stats from AsyncStorage");
+    try {
+      const stored = await getItem({ key: "connections-stats" });
+      
+      if (stored) {
+        const parsedStats = JSON.parse(stored);
+        console.log("✅ ConnectionsResults: Stats found:", parsedStats);
+        
+        // Ensure backward compatibility - add new fields if they don't exist
+        if (!parsedStats.winDates) parsedStats.winDates = [];
+        if (parsedStats.currentStreak === undefined) parsedStats.currentStreak = 0;
+        if (parsedStats.longestStreak === undefined) parsedStats.longestStreak = 0;
+        if (parsedStats.fastestTime === undefined) parsedStats.fastestTime = null;
+        
+        return parsedStats;
+      }
+    } catch (error) {
+      console.error("Error parsing stats, using defaults:", error);
+    }
+    
+    console.log("📝 ConnectionsResults: No stats found, using defaults");
+    return defaultStats;
+  };
+  
+  const saveStats = async (stats: LifetimeStats): Promise<void> => {
+    console.log("💾 ConnectionsResults: Saving stats to AsyncStorage:", stats);
+    try {
+      await setItem({ key: "connections-stats", value: JSON.stringify(stats) });
+      console.log("✅ ConnectionsResults: Stats saved successfully");
+    } catch (error) {
+      console.error("Error saving stats:", error);
+      throw error;
+    }
+  };
+  
+  return { loadStats, saveStats };
+}
+
+/**
+ * Hook for managing user ID with Shopify AsyncStorage
+ */
+export function useUserId() {
+  const { getItem, setItem } = useAsyncStorage();
+  
+  const getUserId = async (): Promise<string> => {
+    console.log('🔑 Getting user ID from AsyncStorage');
+    try {
+      let userId = await getItem({ key: "connections-user-id" });
+      
+      if (!userId) {
+        // Generate a simple user ID based on timestamp and random number
+        userId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        console.log('🆔 Generated new user ID:', userId);
+        await setItem({ key: "connections-user-id", value: userId });
+        console.log('💾 Saved new user ID to AsyncStorage');
+      } else {
+        console.log('✅ Found existing user ID:', userId);
+      }
+      
+      return userId;
+    } catch (error) {
+      console.error('Error managing user ID:', error);
+      // Fallback to a temporary ID if storage fails
+      return `temp_user_${Date.now()}`;
+    }
+  };
+  
+  return { getUserId };
+}
+
+/**
+ * Legacy function for backward compatibility - Load lifetime stats from localStorage
+ * @deprecated Use useLifetimeStats hook instead
  */
 export function loadStats(): LifetimeStats {
   console.log("📖 ConnectionsResults: Loading local stats from localStorage");
@@ -50,32 +164,11 @@ export function loadStats(): LifetimeStats {
     fastestTime: null,
   };
   
-  if (stored) {
-    try {
-      const parsedStats = JSON.parse(stored);
-      console.log("✅ ConnectionsResults: Local stats found:", parsedStats);
-      
-      // Ensure all required fields exist (backward compatibility)
-      const mergedStats: LifetimeStats = {
-        ...defaultStats,
-        ...parsedStats,
-        // Ensure successfulAttempts is always an array
-        successfulAttempts: parsedStats.successfulAttempts || [],
-      };
-      
-      return mergedStats;
-    } catch (error) {
-      console.error("Error parsing local stats, using defaults:", error);
-      return defaultStats;
-    }
-  }
-  
-  console.log("📝 ConnectionsResults: No local stats found, using defaults");
-  return defaultStats;
 }
 
 /**
- * Save lifetime stats to localStorage
+ * Legacy function for backward compatibility - Save lifetime stats to localStorage
+ * @deprecated Use useLifetimeStats hook instead
  */
 export function saveStats(stats: LifetimeStats) {
   console.log("💾 ConnectionsResults: Saving stats to localStorage:", stats);
@@ -353,9 +446,9 @@ export async function submitGameResults(
   const { current_streak, longest_streak } = updateUserStreak(progressData.completed);
   const fastestTime = updateFastestTime(progressData.completion_time, progressData.completed);
   
-  // Calculate average lives remaining from successful attempts only
-  const averageLivesFromSuccessfulAttempts = localStats.successfulAttempts.length > 0 ?
-    localStats.successfulAttempts.reduce((sum, attempt) => sum + attempt.livesRemaining, 0) / localStats.successfulAttempts.length :
+  // Calculate average lives remaining based on mistakes (4 max lives - average mistakes)
+  const averageLivesRemaining = localStats.gamesWon > 0 ?
+    Math.max(0, 4 - (localStats.totalMistakes / localStats.gamesWon)) :
     undefined;
   
   // Generate user stats from local data
@@ -364,8 +457,8 @@ export async function submitGameResults(
     total_games_played: localStats.gamesPlayed,
     best_time: fastestTime,
     average_time: localStats.gamesWon > 0 ? Math.round(localStats.totalTime / localStats.gamesWon) : undefined,
-    average_lives_remaining: averageLivesFromSuccessfulAttempts ? 
-      Math.round(averageLivesFromSuccessfulAttempts * 10) / 10 : undefined,
+    average_lives_remaining: averageLivesRemaining ? 
+      Math.round(averageLivesRemaining * 10) / 10 : undefined,
     total_score: localStats.gamesWon * 400, // 400 points per win
     current_streak,
     longest_streak,
@@ -376,7 +469,7 @@ export async function submitGameResults(
   const personalStats: PersonalStats = {
     average_completion_time: localStats.gamesWon > 0 ? 
       Math.round(localStats.totalTime / localStats.gamesWon) : 0,
-    average_lives_remaining: averageLivesFromSuccessfulAttempts || 0,
+    average_lives_remaining: averageLivesRemaining || 0,
     total_games_played: localStats.gamesPlayed,
     completion_rate: localStats.gamesPlayed > 0 ? 
       Math.round((localStats.gamesWon / localStats.gamesPlayed) * 100) : 0,
@@ -402,7 +495,7 @@ export function getLivesComparedToAverage(currentLivesRemaining: number): {
 } {
   const localStats = loadStats();
   
-  if (localStats.successfulAttempts.length === 0) {
+  if (localStats.gamesWon === 0) {
     return { 
       difference: null, 
       isAboveAverage: false,
@@ -410,7 +503,9 @@ export function getLivesComparedToAverage(currentLivesRemaining: number): {
     };
   }
   
-  const averageLives = localStats.successfulAttempts.reduce((sum, attempt) => sum + attempt.livesRemaining, 0) / localStats.successfulAttempts.length;
+  // Calculate average lives based on average mistakes (4 max lives - average mistakes)
+  const averageMistakes = localStats.totalMistakes / localStats.gamesWon;
+  const averageLives = Math.max(0, 4 - averageMistakes);
   const difference = currentLivesRemaining - averageLives;
   
   return {
