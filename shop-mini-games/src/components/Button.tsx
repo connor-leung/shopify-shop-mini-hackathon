@@ -1,4 +1,5 @@
 import React from "react";
+import { Button as ShopifyButton } from "@shopify/shop-minis-react";
 
 interface ButtonProps {
   children: React.ReactNode;
@@ -38,13 +39,13 @@ export function Button({
   const classes = `${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${className}`;
 
   return (
-    <button
+    <ShopifyButton
       type={type}
       onClick={onClick}
       disabled={disabled}
       className={classes}
     >
       {children}
-    </button>
+    </ShopifyButton>
   );
 }

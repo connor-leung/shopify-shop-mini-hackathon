@@ -1,3 +1,39 @@
+// Local-only interfaces for type definitions
+export interface UserStats {
+  user_id: string;
+  total_games_played: number;
+  best_time?: number;
+  average_time?: number;
+  average_lives_remaining?: number;
+  total_score: number;
+  current_streak: number;
+  longest_streak: number;
+  last_played: string;
+}
+
+export interface GameStats {
+  total_players: number;
+  average_completion_time: number;
+  average_lives_remaining: number;
+  completion_rate: number;
+}
+
+export interface LeaderboardResponse {
+  leaderboard: Array<{
+    user_id: string;
+    score: number;
+    completion_time: number;
+    lives_remaining: number;
+  }>;
+}
+
+export interface PersonalStats {
+  average_completion_time: number;
+  average_lives_remaining: number;
+  total_games_played: number;
+  completion_rate: number;
+}
+
 export interface LifetimeStats {
   gamesPlayed: number;
   gamesWon: number;
@@ -25,20 +61,8 @@ export interface ProgressData {
 export function loadStats(): LifetimeStats {
   console.log("📖 ConnectionsResults: Loading local stats from localStorage");
   const stored = localStorage.getItem("connections-stats");
-  if (stored) {
-    const parsedStats = JSON.parse(stored);
-    console.log("✅ ConnectionsResults: Local stats found:", parsedStats);
-    
-    // Ensure backward compatibility - add new fields if they don't exist
-    if (!parsedStats.winDates) parsedStats.winDates = [];
-    if (parsedStats.currentStreak === undefined) parsedStats.currentStreak = 0;
-    if (parsedStats.longestStreak === undefined) parsedStats.longestStreak = 0;
-    if (parsedStats.fastestTime === undefined) parsedStats.fastestTime = null;
-    
-    return parsedStats;
-  }
-  console.log("📝 ConnectionsResults: No local stats found, using defaults");
-  return {
+  
+  const defaultStats: LifetimeStats = {
     gamesPlayed: 0,
     gamesWon: 0,
     totalTime: 0,
@@ -59,8 +83,11 @@ export function loadStats(): LifetimeStats {
       const mergedStats: LifetimeStats = {
         ...defaultStats,
         ...parsedStats,
-        // Ensure successfulAttempts is always an array
-        successfulAttempts: parsedStats.successfulAttempts || [],
+        // Ensure new fields exist
+        winDates: parsedStats.winDates || [],
+        currentStreak: parsedStats.currentStreak || 0,
+        longestStreak: parsedStats.longestStreak || 0,
+        fastestTime: parsedStats.fastestTime || null,
       };
       
       return mergedStats;
@@ -240,213 +267,47 @@ export function createProgressData(
 }
 
 /**
- * Helper function to generate or get user ID
+ * Submit game results and generate local user stats (no backend)
  */
-export function getUserId(): string {
-  console.log('🔑 Getting user ID from localStorage');
-  const storageKey = 'connections-user-id';
-  let userId = localStorage.getItem(storageKey);
-  
-  if (!userId) {
-    // Generate a simple user ID based on timestamp and random number
-    userId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    console.log('🆔 Generated new user ID:', userId);
-    localStorage.setItem(storageKey, userId);
-    console.log('💾 Saved new user ID to localStorage');
-  } else {
-    console.log('✅ Found existing user ID:', userId);
-  }
-  
-  return userId;
-}
-
-/**
- * Update and calculate user streak based on local storage
- * Streak is based on consecutive days with at least one win
- */
-function updateUserStreak(won: boolean): { current_streak: number; longest_streak: number } {
-  const today = new Date().toDateString();
-  const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toDateString();
-  
-  const lastPlayedKey = 'connections-last-played';
-  const lastWonKey = 'connections-last-won';
-  const streakKey = 'connections-streak';
-  const longestStreakKey = 'connections-longest-streak';
-  
-  const lastPlayed = localStorage.getItem(lastPlayedKey);
-  const lastWon = localStorage.getItem(lastWonKey);
-  const currentStreak = parseInt(localStorage.getItem(streakKey) || '0');
-  const longestStreak = parseInt(localStorage.getItem(longestStreakKey) || '0');
-  
-  let newCurrentStreak = currentStreak;
-  let newLongestStreak = longestStreak;
-  
-  if (won) {
-    if (lastWon === today) {
-      // Already won today, streak unchanged
-    } else if (lastWon === yesterday || currentStreak === 0) {
-      // Won yesterday (consecutive) or starting new streak
-      newCurrentStreak = currentStreak + 1;
-      if (newCurrentStreak > longestStreak) {
-        newLongestStreak = newCurrentStreak;
-      }
-    } else {
-      // Gap in playing, restart streak
-      newCurrentStreak = 1;
-    }
-    
-    // Update last won date
-    localStorage.setItem(lastWonKey, today);
-  } else {
-    // Check if we missed yesterday and should reset streak
-    if (lastPlayed && lastPlayed !== today && lastPlayed !== yesterday && lastWon !== yesterday) {
-      newCurrentStreak = 0;
-    }
-  }
-  
-  // Update localStorage
-  localStorage.setItem(lastPlayedKey, today);
-  localStorage.setItem(streakKey, newCurrentStreak.toString());
-  localStorage.setItem(longestStreakKey, newLongestStreak.toString());
-  
-  console.log(`🔥 Streak updated: current=${newCurrentStreak}, longest=${newLongestStreak}`);
-  
-  return {
-    current_streak: newCurrentStreak,
-    longest_streak: newLongestStreak
-  };
-}
-
-/**
- * Get or update the fastest time record
- */
-function updateFastestTime(completionTime: number, won: boolean): number | undefined {
-  const fastestTimeKey = 'connections-fastest-time';
-  const currentFastest = localStorage.getItem(fastestTimeKey);
-  
-  if (!won) {
-    return currentFastest ? parseInt(currentFastest) : undefined;
-  }
-  
-  if (!currentFastest || completionTime < parseInt(currentFastest)) {
-    localStorage.setItem(fastestTimeKey, completionTime.toString());
-    console.log(`⚡ New fastest time record: ${completionTime}s`);
-    return completionTime;
-  }
-  
-  return parseInt(currentFastest);
-}
-
 export async function submitGameResults(
   progressData: ProgressData
 ): Promise<{
   userStats: UserStats;
-  personalStats: PersonalStats;
 }> {
   console.log(
     "📤 ConnectionsResults: Processing game results locally:",
     progressData
   );
 
-  // Get local stats
-  const localStats = loadStats();
-  const { current_streak, longest_streak } = updateUserStreak(progressData.completed);
-  const fastestTime = updateFastestTime(progressData.completion_time, progressData.completed);
-  
-  // Calculate average lives remaining from successful attempts only
-  const averageLivesFromSuccessfulAttempts = localStats.successfulAttempts.length > 0 ?
-    localStats.successfulAttempts.reduce((sum, attempt) => sum + attempt.livesRemaining, 0) / localStats.successfulAttempts.length :
-    undefined;
-  
+  // Update local stats
+  updateLocalStats(
+    progressData.completed,
+    progressData.completion_time,
+    4 - progressData.lives_remaining, // Convert lives to mistakes
+    4 // Assume 4 total guesses for now
+  );
+
+  // Load updated stats
+  const stats = loadStats();
+
   // Generate user stats from local data
   const userStats: UserStats = {
     user_id: progressData.user_id,
-    total_games_played: localStats.gamesPlayed,
-    best_time: fastestTime,
-    average_time: localStats.gamesWon > 0 ? Math.round(localStats.totalTime / localStats.gamesWon) : undefined,
-    average_lives_remaining: averageLivesFromSuccessfulAttempts ? 
-      Math.round(averageLivesFromSuccessfulAttempts * 10) / 10 : undefined,
-    total_score: localStats.gamesWon * 400, // 400 points per win
-    current_streak,
-    longest_streak,
+    total_games_played: stats.gamesPlayed,
+    best_time: stats.fastestTime || undefined,
+    average_time: stats.gamesWon > 0 ? Math.round(stats.totalTime / stats.gamesWon) : undefined,
+    average_lives_remaining: stats.gamesWon > 0 ? Math.round((4 - stats.totalMistakes / stats.gamesWon) * 10) / 10 : undefined,
+    total_score: stats.gamesWon * 400, // 400 points per win
+    current_streak: stats.currentStreak,
+    longest_streak: stats.longestStreak,
     last_played: new Date().toISOString(),
   };
 
-  // Calculate personal stats from local storage
-  const personalStats: PersonalStats = {
-    average_completion_time: localStats.gamesWon > 0 ? 
-      Math.round(localStats.totalTime / localStats.gamesWon) : 0,
-    average_lives_remaining: averageLivesFromSuccessfulAttempts || 0,
-    total_games_played: localStats.gamesPlayed,
-    completion_rate: localStats.gamesPlayed > 0 ? 
-      Math.round((localStats.gamesWon / localStats.gamesPlayed) * 100) : 0,
-  };
-
   console.log("👤 ConnectionsResults: User stats generated:", userStats);
-  console.log("📊 ConnectionsResults: Personal stats generated:", personalStats);
   console.log("🎉 ConnectionsResults: All data processed successfully!");
 
   return {
     userStats,
-    personalStats,
-  };
-}
-
-/**
- * Get how many more lives user has compared to their average successful attempts
- */
-export function getLivesComparedToAverage(currentLivesRemaining: number): { 
-  difference: number | null; 
-  isAboveAverage: boolean;
-  averageLives: number | null;
-} {
-  const localStats = loadStats();
-  
-  if (localStats.successfulAttempts.length === 0) {
-    return { 
-      difference: null, 
-      isAboveAverage: false,
-      averageLives: null 
-    };
-  }
-  
-  const averageLives = localStats.successfulAttempts.reduce((sum, attempt) => sum + attempt.livesRemaining, 0) / localStats.successfulAttempts.length;
-  const difference = currentLivesRemaining - averageLives;
-  
-  return {
-    difference: Math.round(difference * 10) / 10,
-    isAboveAverage: difference > 0,
-    averageLives: Math.round(averageLives * 10) / 10
-  };
-}
-
-/**
- * Get current fastest time from local storage
- */
-export function getFastestTime(): number | null {
-  const fastestTimeKey = 'connections-fastest-time';
-  const fastest = localStorage.getItem(fastestTimeKey);
-  return fastest ? parseInt(fastest) : null;
-}
-
-/**
- * Check if current time is a new personal record
- */
-export function isNewPersonalRecord(completionTime: number): boolean {
-  const fastest = getFastestTime();
-  return !fastest || completionTime < fastest;
-}
-
-/**
- * Get current streak information
- */
-export function getCurrentStreak(): { current: number; longest: number } {
-  const currentStreak = parseInt(localStorage.getItem('connections-streak') || '0');
-  const longestStreak = parseInt(localStorage.getItem('connections-longest-streak') || '0');
-  
-  return {
-    current: currentStreak,
-    longest: longestStreak
   };
 }
 
@@ -506,11 +367,68 @@ export function getAverageWinTime(): number {
 }
 
 /**
+ * Generate or get user ID from localStorage
+ */
+export function getUserId(): string {
+  console.log('🔑 Getting user ID from localStorage');
+  const storageKey = 'connections-user-id';
+  let userId = localStorage.getItem(storageKey);
+  
+  if (!userId) {
+    // Generate a simple user ID based on timestamp and random number
+    userId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    console.log('🆔 Generated new user ID:', userId);
+    localStorage.setItem(storageKey, userId);
+    console.log('💾 Saved new user ID to localStorage');
+  } else {
+    console.log('✅ Found existing user ID:', userId);
+  }
+  
+  return userId;
+}
+
+/**
+ * Get how many more lives user has compared to their average
+ */
+export function getLivesComparedToAverage(currentLivesRemaining: number): { 
+  difference: number | null; 
+  isAboveAverage: boolean;
+  averageLives: number | null;
+} {
+  const stats = loadStats();
+  
+  if (stats.gamesWon === 0) {
+    return { 
+      difference: null, 
+      isAboveAverage: false,
+      averageLives: null 
+    };
+  }
+  
+  const averageLives = getAverageLivesRemaining();
+  const difference = currentLivesRemaining - averageLives;
+  
+  return {
+    difference: Math.round(difference * 10) / 10,
+    isAboveAverage: difference > 0,
+    averageLives: averageLives
+  };
+}
+
+/**
+ * Check if current time is a new personal record
+ */
+export function isNewPersonalRecord(completionTime: number): boolean {
+  const fastest = getFastestTime();
+  return !fastest || completionTime < fastest;
+}
+
+/**
  * Generate share text for the game results
  */
 export function createShareText(won: boolean, elapsedSeconds: number, mistakes: number): string {
   const streak = getCurrentStreak();
-  const streakText = streak.current > 0 ? ` 🔥${streak.current}-day streak!` : '';
+  const streakText = streak > 0 ? ` 🔥${streak}-day streak!` : '';
   
   return `Shopify Connections – ${
     won ? "Won" : "Lost"

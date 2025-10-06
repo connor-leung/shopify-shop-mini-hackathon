@@ -1,14 +1,14 @@
 {
-  "name": "mini-link",
+  "name": "Links",
   "private": true,
   "version": "0.0.1",
-  "description": "Mini Link - A Shop Mini connections game",
+  "description": "Links - A connections game",
   "main": "index.tsx",
   "scripts": {
     "start": "shop-minis dev"
   },
   "devDependencies": {
-    "@shopify/shop-minis-cli": "0.0.187",
+    "@shopify/shop-minis-cli": "0.0.193",
     "@tailwindcss/vite": "^4.1.8",
     "@types/react": "^18.2.43",
     "@types/react-dom": "^18.2.17",
@@ -17,7 +17,7 @@
     "typescript": "^5.8.3"
   },
   "dependencies": {
-    "@shopify/shop-minis-react": "0.1.0",
+    "@shopify/shop-minis-react": "0.1.4",
     "react": "18.2.0",
     "react-dom": "18.2.0"
   }

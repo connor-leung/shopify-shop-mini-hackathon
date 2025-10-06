@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useGenerateGameData } from "../../utils/useGenerateGameData";
 import { BackButton } from "../../components/BackButton";
 import { getLivesImageUrl } from "../../config/imageUrls";
+import { Button, Image } from "@shopify/shop-minis-react";
 
 // Add difficulty color palette constant after imports
 const DIFFICULTY_COLORS: Record<string, { fill: string; stroke: string }> = {
@@ -365,7 +366,7 @@ export default function ConnectionsGame({ onFinish, onBack }: ConnectionsGamePro
               return (
                 <div className="w-full h-full relative">
                   {/* Image with consistent styling */}
-                  <img
+                  <Image
                     src={imgUrl}
                     alt={productTitle}
                     className={`w-full h-full object-cover rounded-lg brightness-90 contrast-110 saturate-75 transition-transform duration-200 ${
@@ -558,7 +559,7 @@ export default function ConnectionsGame({ onFinish, onBack }: ConnectionsGamePro
                               if (imgUrl) {
                                 return (
                                   <div className="w-full h-full relative">
-                                    <img
+                                    <Image
                                       src={imgUrl}
                                       alt={productTitle}
                                       className="w-full h-full object-cover rounded-lg brightness-90 contrast-110 saturate-75"
@@ -599,7 +600,7 @@ export default function ConnectionsGame({ onFinish, onBack }: ConnectionsGamePro
           {/* Action Buttons - only show when not showing answers */}
           {!showingAnswers && (
             <div className="flex gap-3 mb-6">
-              <button
+              <Button
                 className={`flex-1 py-3 rounded-full border-2 font-semibold transition-all duration-200 ${
                   hintsAvailable <= 0 || gameOver
                     ? "bg-gray-100 text-gray-400 border-gray-300 cursor-not-allowed"
@@ -626,8 +627,8 @@ export default function ConnectionsGame({ onFinish, onBack }: ConnectionsGamePro
                 }}
               >
                 Hint{hintsAvailable > 1 ? ` (${hintsAvailable})` : ""}
-              </button>
-              <button
+              </Button>
+              <Button
                 className={`flex-1 py-3 rounded-full font-semibold transition-all duration-200 ${
                   selectedIds.length === 4 && !gameOver && !isAnimating
                     ? "text-white"
@@ -654,14 +655,14 @@ export default function ConnectionsGame({ onFinish, onBack }: ConnectionsGamePro
                 }}
               >
                 {gameOver ? "Submit" : "Submit"}
-              </button>
+              </Button>
             </div>
           )}
 
           {/* See Results Button - only show when showing answers */}
           {showingAnswers && (
             <div className="mb-6">
-              <button
+              <Button
                 className="w-full py-3 rounded-full font-semibold text-white transition-all duration-200"
                 style={{ backgroundColor: "#4F34E2" }}
                 onClick={handleSeeResults}
@@ -675,14 +676,14 @@ export default function ConnectionsGame({ onFinish, onBack }: ConnectionsGamePro
                 }}
               >
                 See Results
-              </button>
+              </Button>
             </div>
           )}
 
           {/* Lives Display with Custom Lightning Icons - only show when not showing answers */}
           {!showingAnswers && (
             <div className="text-center">
-              <img
+              <Image
                 src={getLivesImageUrl(remainingLives)}
                 alt={`${remainingLives} lives remaining`}
                 className="h-6 w-auto mx-auto"

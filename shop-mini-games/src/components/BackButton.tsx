@@ -1,4 +1,5 @@
 import React from 'react';
+import { Button } from '@shopify/shop-minis-react';
 
 interface BackButtonProps {
   onClick: () => void;
@@ -14,7 +15,7 @@ export function BackButton({ onClick, className = '', variant = 'default' }: Bac
     : "w-10 h-10 rounded-full";
 
   return (
-    <button
+    <Button
       onClick={onClick}
       className={`${baseClasses} ${variantClasses} ${className}`}
       aria-label="Go back"
@@ -35,6 +36,6 @@ export function BackButton({ onClick, className = '', variant = 'default' }: Bac
           strokeLinejoin="round"
         />
       </svg>
-    </button>
+    </Button>
   );
 }

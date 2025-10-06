@@ -39,8 +39,6 @@ export function App() {
         return (
           <ConnectionsResults
             results={results}
-            onPlayAgain={() => setCurrentPage("connections-game")}
-            onBackHome={() => setCurrentPage("home")}
             onNavigate={setCurrentPage}
           />
         );

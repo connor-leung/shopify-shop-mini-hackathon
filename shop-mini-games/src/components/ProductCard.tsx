@@ -1,5 +1,5 @@
 import { Component } from "react";
-import { ProductCard as ShopifyProductCard } from "@shopify/shop-minis-react";
+import { ProductCard as ShopifyProductCard, Button as ShopifyButton, Image as ShopifyImage } from "@shopify/shop-minis-react";
 
 interface CustomProductCardProps {
   product: any; // You can type this more specifically based on Shopify's product type
@@ -87,12 +87,12 @@ class BaseProductCard extends Component<
 
     return (
       <div className="mt-2 pt-2 border-t border-gray-100">
-        <button
+        <ShopifyButton
           onClick={this.toggleView}
           className="w-full bg-gray-100 text-gray-700 py-1 px-2 rounded text-xs hover:bg-gray-200 transition-colors"
         >
           Toggle Custom View
-        </button>
+        </ShopifyButton>
       </div>
     );
   }
@@ -139,7 +139,7 @@ class BaseProductCard extends Component<
 
     return (
       <div className="aspect-square w-full overflow-hidden rounded-lg bg-gray-100">
-        <img
+        <ShopifyImage
           src={productImage}
           alt={product.title || "Product image"}
           className="h-full w-full object-cover object-center hover:scale-105 transition-transform duration-200"
@@ -213,18 +213,18 @@ class BaseProductCard extends Component<
   protected renderActionButtons(): JSX.Element {
     return (
       <div className="mt-3 flex gap-2">
-        <button
+        <ShopifyButton
           className="flex-1 bg-blue-500 text-white py-2 px-3 rounded text-sm hover:bg-blue-600 transition-colors"
           onClick={this.handleQuickView}
         >
           Quick View
-        </button>
-        <button
+        </ShopifyButton>
+        <ShopifyButton
           className="flex-1 bg-gray-200 text-gray-700 py-2 px-3 rounded text-sm hover:bg-gray-300 transition-colors"
           onClick={this.handleAddToCart}
         >
           Add to Cart
-        </button>
+        </ShopifyButton>
       </div>
     );
   }

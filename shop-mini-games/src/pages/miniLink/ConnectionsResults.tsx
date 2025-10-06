@@ -3,20 +3,16 @@ import { GameResults } from "./ConnectionsGame";
 import {
   getUserId,
   UserStats,
-  PersonalStats,
   updateLocalStats,
   createProgressData,
   submitGameResults,
-  createShareText,
-  getLivesComparedToAverage,
   isNewPersonalRecord,
 } from "../../utils/connectionsStats";
 import { Button } from "../../components/Button";
+import { Button as ShopifyButton } from "@shopify/shop-minis-react";
 
 interface ConnectionsResultsProps {
   results: GameResults;
-  onPlayAgain: () => void;
-  onBackHome?: () => void;
   onNavigate?: (page: string) => void;
 }
 
@@ -52,14 +48,11 @@ const Confetti = ({ show }: { show: boolean }) => {
 
 export default function ConnectionsResults({
   results,
-  onPlayAgain,
-  onBackHome,
   onNavigate,
 }: ConnectionsResultsProps) {
   const { won, mistakes, elapsedSeconds, totalGuesses, solvedCategories } =
     results;
   const [userStats, setUserStats] = useState<UserStats | null>(null);
-  const [personalStats, setPersonalStats] = useState<PersonalStats | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Confetti state
@@ -109,13 +102,12 @@ export default function ConnectionsResults({
         );
 
         // Process local data
-        const { userStats, personalStats } = await submitGameResults(
+        const { userStats } = await submitGameResults(
           progressData
         );
 
         // Update component state with processed data
         setUserStats(userStats);
-        setPersonalStats(personalStats);
       } catch (error) {
         // Since we're using local storage only, this shouldn't happen
         console.error("Error processing local data:", error);
@@ -126,8 +118,6 @@ export default function ConnectionsResults({
 
     submitResults();
   }, []); // Only run once when component mounts
-
-  const shareText = createShareText(won, elapsedSeconds, mistakes);
 
   // Navigation functions
   const goToNext = () => {

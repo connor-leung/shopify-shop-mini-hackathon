@@ -25,7 +25,7 @@ export default function ConnectionsIntro({
       )}
       
       <div className="px-4 py-8 max-w-xl mx-auto text-center">
-        <h1 className="text-3xl font-extrabold mb-4">How to Play Mini Link</h1>
+        <h1 className="text-3xl font-extrabold mb-4">How to Play Links</h1>
 
         <p className="mb-4 text-gray-700 leading-relaxed">
           The goal of this game is figure out groups of items that have a shared

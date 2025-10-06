@@ -29,7 +29,7 @@ export default function GameItemsPage({
           <h1 className="text-3xl font-bold mb-4 text-gray-900">Explore</h1>
           <p className="text-gray-600 mb-6">
             {won
-              ? "Check out the items from your Mini Link."
+              ? "Check out the items from your Links game."
               : "Here are all the items and their categories from today's game."}
           </p>
         </div>
