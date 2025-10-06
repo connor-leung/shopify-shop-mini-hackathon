@@ -19,7 +19,6 @@ export function App() {
         return (
           <ConnectionsIntro
             onStart={() => setCurrentPage("connections-game")}
-            onBack={() => setCurrentPage("home")}
           />
         );
 
@@ -31,7 +30,6 @@ export function App() {
               setResults(results);
               setCurrentPage("connections-results");
             }}
-            onBack={() => setCurrentPage("home")}
           />
         );
 

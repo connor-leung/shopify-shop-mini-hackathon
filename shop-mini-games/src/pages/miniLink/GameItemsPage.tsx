@@ -13,13 +13,11 @@ const DIFFICULTY_COLORS: Record<string, { fill: string; stroke: string }> = {
 interface GameItemsPageProps {
   results: GameResults;
   onNavigate: (page: string) => void;
-  onBack?: () => void; // Accept onBack prop but don't use it (no back button rendered)
 }
 
 export default function GameItemsPage({
   results,
   onNavigate,
-  onBack, // Accept but don't use - no back button will be rendered
 }: GameItemsPageProps) {
   const { solvedCategories, allCategories, won } = results;
 
