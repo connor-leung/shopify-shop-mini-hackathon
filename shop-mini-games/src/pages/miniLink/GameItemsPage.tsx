@@ -2,6 +2,14 @@ import ProductCard from "../../components/ProductCard";
 import { GameResults } from "./ConnectionsGame";
 import { Button } from "../../components/Button";
 
+// Use the same difficulty color palette as ConnectionsGame
+const DIFFICULTY_COLORS: Record<string, { fill: string; stroke: string }> = {
+  easy: { fill: "#E2F1E2", stroke: "#92D08D" },
+  medium: { fill: "#DBF2EE", stroke: "#82DEBD" },
+  hard: { fill: "#E1D9FD", stroke: "#9C83F8" },
+  expert: { fill: "#F8DBDE", stroke: "#FF967D" },
+};
+
 interface GameItemsPageProps {
   results: GameResults;
   onNavigate: (page: string) => void;
@@ -40,40 +48,26 @@ export default function GameItemsPage({
             <div key={`${category.category}-${index}`} className="space-y-4">
               {/* Category Header */}
               <div
-                className={`p-4 rounded-lg border-l-4 ${
-                  category.difficulty === "Easy"
-                    ? "border-[#92D08D]"
-                    : category.difficulty === "Medium"
-                    ? "border-[#82DEBD]"
-                    : category.difficulty === "Hard"
-                    ? "border-[#9C83F8]"
-                    : "border-[#F8DBDE]"
-                }`}
-                style={{
-                  backgroundColor:
-                    category.difficulty === "Easy"
-                      ? "#E2F1E2"
-                      : category.difficulty === "Medium"
-                      ? "#DBF2EE"
-                      : category.difficulty === "Hard"
-                      ? "#E1D9FD"
-                      : "#F8DBDE",
-                }}
+                className="p-4 rounded-lg border-l-4"
+                style={(() => {
+                  const colors = DIFFICULTY_COLORS[category.difficulty.toLowerCase()] || DIFFICULTY_COLORS.easy;
+                  return {
+                    backgroundColor: colors.fill,
+                    borderLeftColor: colors.stroke,
+                  };
+                })()}
               >
                 <h2 className="text-2xl font-bold text-gray-900">
                   {category.category}
                 </h2>
                 <p
-                  className={`text-lg font-medium ${
-                    category.difficulty === "Easy"
-                      ? "text-[#92D08D]"
-                      : category.difficulty === "Medium"
-                      ? "text-[#82DEBD]"
-                      : category.difficulty === "Hard"
-                      ? "text-[#9C83F8]"
-                      : "text-[#F8DBDE]"
-                  }`}
-                ></p>
+                  className="text-lg font-medium"
+                  style={{
+                    color: (DIFFICULTY_COLORS[category.difficulty.toLowerCase()] || DIFFICULTY_COLORS.easy).stroke
+                  }}
+                >
+                  {category.difficulty.charAt(0).toUpperCase() + category.difficulty.slice(1)}
+                </p>
               </div>
 
               {/* Product Cards Grid */}
