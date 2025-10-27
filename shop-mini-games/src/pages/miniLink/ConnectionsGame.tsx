@@ -677,7 +677,11 @@ export default function ConnectionsGame({ onFinish }: ConnectionsGameProps) {
               <Image
                 src={getLivesImageUrl(remainingLives)}
                 alt={`${remainingLives} lives remaining`}
-                className="h-6 w-auto mx-auto"
+                className="mx-auto"
+                style={{ 
+                  transform: 'scale(0.5)',
+                  transformOrigin: 'center'
+                }}
               />
             </div>
           )}
