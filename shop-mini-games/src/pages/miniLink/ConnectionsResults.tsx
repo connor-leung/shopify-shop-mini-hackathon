@@ -276,28 +276,28 @@ export default function ConnectionsResults({
               </div>
               {/* Dots Indicator - Only show when won */}
               <div className="flex justify-center mt-4 gap-2">
-                <button
+                <ShopifyButton
                   onClick={() => setCurrentIndex(0)}
                   className={`w-2 h-2 rounded-full transition-colors ${
                     0 === currentIndex ? "bg-blue-600" : "bg-gray-300"
                   }`}
                   aria-label="Go to Streaks stat"
                 />
-                <button
+                <ShopifyButton
                   onClick={() => setCurrentIndex(1)}
                   className={`w-2 h-2 rounded-full transition-colors ${
                     1 === currentIndex ? "bg-blue-600" : "bg-gray-300"
                   }`}
                   aria-label="Go to Time stat"
                 />
-                <button
+                <ShopifyButton
                   onClick={() => setCurrentIndex(2)}
                   className={`w-2 h-2 rounded-full transition-colors ${
                     2 === currentIndex ? "bg-blue-600" : "bg-gray-300"
                   }`}
                   aria-label="Go to Lives Remaining stat"
                 />
-                <button
+                <ShopifyButton
                   onClick={() => setCurrentIndex(3)}
                   className={`w-2 h-2 rounded-full transition-colors ${
                     3 === currentIndex ? "bg-blue-600" : "bg-gray-300"
