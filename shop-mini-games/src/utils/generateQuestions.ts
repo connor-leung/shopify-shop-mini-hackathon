@@ -1,5 +1,5 @@
 import { useProductSearch } from "@shopify/shop-minis-react";
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import { easy, medium, hard, expert } from "../questions/questions";
 
 export type Difficulty = "easy" | "medium" | "hard" | "expert";
@@ -62,18 +62,7 @@ export function useGenerateQuestion(difficulty: Difficulty, seed?: number) {
     product: product
   })) : [];
 
-  // Dev logging: print the "answers" (the correct group) once items are ready
-  useEffect(() => {
-    if (items.length === searchTerms.length && items.every((i) => i.product?.title)) {
-      const titles = items.map((i) => i.product.title);
-      // This logs in the browser console; most dev servers won't mirror this to the terminal
-      // Prefix makes it easy to filter
-      console.log(
-        "[Connections Answers]",
-        { difficulty, category, titles }
-      );
-    }
-  }, [difficulty, category, items, searchTerms.length]);
+  
 
   return {
     difficulty,
