@@ -33,7 +33,31 @@ export interface GameResults {
 }
 
 export default function ConnectionsGame({ onFinish }: ConnectionsGameProps) {
-  const { loading, error, categories } = useGenerateGameData();
+  // Retry control state
+  const [retrySeed, setRetrySeed] = useState(0);
+  const [attemptTimestamps, setAttemptTimestamps] = useState<number[]>([]);
+  const { loading, error, categories } = useGenerateGameData(retrySeed);
+
+  // Helper enforcing <= 20 calls per 60s: 4 calls per attempt -> max 5 attempts/60s
+  const maxAttemptsPerMinute = 5;
+  const canAttempt = () => {
+    const now = Date.now();
+    const windowStart = now - 60000;
+    const recent = attemptTimestamps.filter((t) => t >= windowStart);
+    return recent.length < maxAttemptsPerMinute;
+  };
+
+  const recordAttempt = () => {
+    const now = Date.now();
+    const windowStart = now - 60000;
+    setAttemptTimestamps((prev) => [...prev.filter((t) => t >= windowStart), now]);
+  };
+
+  const retryWithBackoff = () => {
+    if (!canAttempt()) return; // respect rate limit window
+    recordAttempt();
+    setRetrySeed((s) => s + 1);
+  };
 
   // Flattened list of all items with references to their category
   const allItems = useMemo(() => {
@@ -99,6 +123,34 @@ export default function ConnectionsGame({ onFinish }: ConnectionsGameProps) {
     }
   }, [gameOver, showingAnswers]);
 
+  // Auto-retry policy: if generic 500, use gentle backoff; if explicit rate limit,
+  // wait for window reset (60s since earliest recent attempt) and retry once.
+  useEffect(() => {
+    if (!error) return;
+    const msg = (error && (error as any).message) || "";
+    const now = Date.now();
+    const windowStart = now - 60000; // 60s window
+    const recent = attemptTimestamps.filter((t) => t >= windowStart);
+
+    // If we hit rate limit, wait until the oldest recent attempt drops out of the window
+    if (typeof msg === 'string' && msg.includes('Rate limit exceeded')) {
+      if (recent.length === 0) return; // nothing to wait for
+      const oldest = Math.min(...recent);
+      const msUntilReset = Math.max(0, oldest + 60000 - now) + 250; // 250ms buffer
+      const id = setTimeout(() => {
+        if (canAttempt()) retryWithBackoff();
+      }, msUntilReset);
+      return () => clearTimeout(id);
+    }
+
+    // Otherwise gentle backoff
+    const delayMs = Math.min(15000, 2000 + recent.length * 2000);
+    const id = setTimeout(() => {
+      if (canAttempt()) retryWithBackoff();
+    }, delayMs);
+    return () => clearTimeout(id);
+  }, [error, attemptTimestamps]);
+
   const handleSeeResults = () => {
     const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
     onFinish({
@@ -119,7 +171,7 @@ export default function ConnectionsGame({ onFinish }: ConnectionsGameProps) {
     });
   };
 
-  if (loading) {
+  if (loading || error) {
     return (
       <div
         className="min-h-screen flex items-center justify-center p-4"
@@ -131,21 +183,9 @@ export default function ConnectionsGame({ onFinish }: ConnectionsGameProps) {
             style={{ borderColor: "#4F34E2" }}
           ></div>
           <p className="text-gray-600 font-medium">Loading your game...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div
-        className="min-h-screen flex items-center justify-center p-4"
-        style={{ background: "linear-gradient(to bottom, #FAFAFA, #EEEAFF)" }}
-      >
-        <div className="text-center max-w-md">
-          <div className="text-4xl mb-4">⚠️</div>
-          <h3 className="text-lg font-semibold text-black mb-2">Game Error</h3>
-          <p className="text-red-600 text-sm">{error.message}</p>
+          {error ? (
+            <p className="text-gray-400 text-xs mt-2">Retrying…</p>
+          ) : null}
         </div>
       </div>
     );
@@ -235,12 +275,19 @@ export default function ConnectionsGame({ onFinish }: ConnectionsGameProps) {
   const submitGuess = async () => {
     if (selectedIds.length !== 4 || isAnimating) return;
 
-    // Find if guess matches any unsolved category
-    const matchedCategory = categories.find(
-      (cat) =>
-        !solvedCategoryKeys.includes(cat.category) &&
-        selectedIds.every((id) => cat.items.some((item) => item.id === id))
-    );
+    // Determine match based on the items' categoryKey present in the current grid
+    const selectedItems = shuffledItems.filter((it) => selectedIds.includes(it.id));
+    const allSameCategory =
+      selectedItems.length === 4 &&
+      new Set(selectedItems.map((it) => it.categoryKey)).size === 1;
+
+    const targetCategoryKey = allSameCategory ? selectedItems[0].categoryKey : null;
+
+    const matchedCategory = targetCategoryKey
+      ? categories.find(
+          (cat) => !solvedCategoryKeys.includes(cat.category) && cat.category === targetCategoryKey
+        )
+      : undefined;
 
     setTotalGuesses((g) => g + 1);
 
@@ -282,10 +329,18 @@ export default function ConnectionsGame({ onFinish }: ConnectionsGameProps) {
 
     if (!targetCategory) return;
 
-    const categoryItemIds = targetCategory.items.map((item) => item.id);
+    // Prefer items that are currently in the grid (not solved/removed)
+    const gridIdsForCategory = shuffledItems
+      .filter((item) => item.categoryKey === targetCategory.category)
+      .map((item) => item.id);
 
-    // Reveal 3 items from this category
-    const itemsToHint = categoryItemIds.slice(0, 3);
+    // Fallback to source list if, for some reason, grid is empty (shouldn't happen for unsolved)
+    const sourceIds = gridIdsForCategory.length > 0
+      ? gridIdsForCategory
+      : targetCategory.items.map((item) => item.id);
+
+    // Reveal up to 3 items that are not already hinted
+    const itemsToHint = sourceIds.filter((id) => !hintedItems.includes(id)).slice(0, 3);
 
     if (itemsToHint.length > 0) {
       setHintedItems((prev) => [...prev, ...itemsToHint]);
@@ -351,7 +406,19 @@ export default function ConnectionsGame({ onFinish }: ConnectionsGameProps) {
         key={item.id}
         className={getItemClasses()}
         style={status === "hinted" ? { boxShadow: "0 0 0 2px #9C83F8" } : {}}
-        onClick={() => (disabled ? null : toggleSelect(item.id))}
+        role="button"
+        tabIndex={0}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (!disabled) toggleSelect(item.id);
+        }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            if (!disabled) toggleSelect(item.id);
+          }
+        }}
       >
         <div className="absolute inset-0 flex items-center justify-center">
           {(() => {

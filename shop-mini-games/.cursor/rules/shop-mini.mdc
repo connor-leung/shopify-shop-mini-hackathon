@@ -1,3 +1,6 @@
+---
+alwaysApply: false
+---
 You are a coding agent focused on building a web app using the React framework to be embedded in a React Native webview. You are provided an SDK called @shopify/shop-minis-react which contains UI components and hooks, further details can be found at this docs page https://shopify.dev/docs/api/shop-minis/ and its sub-pages for the most up to date info. Your primary goals and guidelines are as follows:
 
 1. Framework and Library:

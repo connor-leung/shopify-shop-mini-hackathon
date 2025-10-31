@@ -1,5 +1,5 @@
 import { useProductSearch } from "@shopify/shop-minis-react";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { easy, medium, hard, expert } from "../questions/questions";
 
 export type Difficulty = "easy" | "medium" | "hard" | "expert";
@@ -37,18 +37,23 @@ function selectUniqueProducts(products: any[], count: number): any[] {
 }
 
 // Hook to generate a question with products for a specific difficulty
-export function useGenerateQuestion(difficulty: Difficulty) {
+export function useGenerateQuestion(difficulty: Difficulty, seed?: number) {
   const difficultyPools: Record<Difficulty, any[]> = { easy: easy, medium: medium, hard: hard, expert: expert };
 
   // Pick a random question only once per component lifecycle to avoid re-randomizing on every render
-  const randomQuestion = useMemo(() => getRandomItem(difficultyPools[difficulty]), [difficulty]);
+  const randomQuestion = useMemo(() => getRandomItem(difficultyPools[difficulty]), [difficulty, seed]);
   const category = Object.keys(randomQuestion)[0];
   const searchTerms = randomQuestion[category] as string[];
 
-  // Use the first search term to get products
+  // Choose a search term deterministically from the list based on seed to
+  // vary queries across retries without increasing concurrent calls.
+  const chosenIndex = searchTerms.length > 0 ? Math.abs((seed || 0)) % searchTerms.length : 0;
+  const chosenTerm = searchTerms[chosenIndex] || searchTerms[0];
+
+  // Single search to minimize API calls and avoid mid-game rate limits
   const { products, loading, error } = useProductSearch({
-    query: searchTerms[0], // Start with first search term
-    first: 50, // Get more results to have better random selection
+    query: chosenTerm,
+    first: 30,
   });
 
   // Process the products to match the question format, ensuring no duplicates
@@ -56,6 +61,19 @@ export function useGenerateQuestion(difficulty: Difficulty) {
     id: product.id,
     product: product
   })) : [];
+
+  // Dev logging: print the "answers" (the correct group) once items are ready
+  useEffect(() => {
+    if (items.length === searchTerms.length && items.every((i) => i.product?.title)) {
+      const titles = items.map((i) => i.product.title);
+      // This logs in the browser console; most dev servers won't mirror this to the terminal
+      // Prefix makes it easy to filter
+      console.log(
+        "[Connections Answers]",
+        { difficulty, category, titles }
+      );
+    }
+  }, [difficulty, category, items, searchTerms.length]);
 
   return {
     difficulty,

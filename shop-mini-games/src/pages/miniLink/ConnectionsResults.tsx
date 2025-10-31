@@ -9,7 +9,6 @@ import {
   isNewPersonalRecord,
 } from "../../utils/connectionsStats";
 import { Button } from "../../components/Button";
-import { Button as ShopifyButton } from "@shopify/shop-minis-react";
 
 interface ConnectionsResultsProps {
   results: GameResults;
@@ -276,40 +275,35 @@ export default function ConnectionsResults({
               </div>
               {/* Dots Indicator - Only show when won */}
               <div className="flex justify-center mt-4 gap-2">
-                <ShopifyButton
-                  onClick={() => setCurrentIndex(0)}
-                  className={`w-2 h-2 rounded-full transition-colors ${
-                    0 === currentIndex ? "bg-blue-600" : "bg-gray-300"
-                  }`}
-                  aria-label="Go to Streaks stat"
-                />
-                <ShopifyButton
-                  onClick={() => setCurrentIndex(1)}
-                  className={`w-2 h-2 rounded-full transition-colors ${
-                    1 === currentIndex ? "bg-blue-600" : "bg-gray-300"
-                  }`}
-                  aria-label="Go to Time stat"
-                />
-                <ShopifyButton
-                  onClick={() => setCurrentIndex(2)}
-                  className={`w-2 h-2 rounded-full transition-colors ${
-                    2 === currentIndex ? "bg-blue-600" : "bg-gray-300"
-                  }`}
-                  aria-label="Go to Lives Remaining stat"
-                />
-                <ShopifyButton
-                  onClick={() => setCurrentIndex(3)}
-                  className={`w-2 h-2 rounded-full transition-colors ${
-                    3 === currentIndex ? "bg-blue-600" : "bg-gray-300"
-                  }`}
-                  aria-label="Go to Total Guesses stat"
-                />
+                {[0,1,2,3].map((i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    aria-label={
+                      i === 0
+                        ? "Go to Streaks stat"
+                        : i === 1
+                        ? "Go to Time stat"
+                        : i === 2
+                        ? "Go to Lives Remaining stat"
+                        : "Go to Total Guesses stat"
+                    }
+                    onClick={() => setCurrentIndex(i)}
+                    className="transition-colors"
+                    style={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: 9999,
+                      backgroundColor: i === currentIndex ? "#2563EB" : "#D1D5DB",
+                    }}
+                  />
+                ))}
               </div>
             </>
           </div>
 
           {/* Action buttons */}
-          <div className="space-y-3">
+          <div className="space-y-3 flex justify-center">
 
             {/* View Game Items */}
             <Button
@@ -318,7 +312,7 @@ export default function ConnectionsResults({
                   onNavigate("game-items");
                 }
               }}
-              className="w-full"
+              className="w-64"
               variant="primary"
             >
               Continue
@@ -343,7 +337,7 @@ export default function ConnectionsResults({
               </div>
             )}
 
-            <div className="space-y-3">
+            <div className="space-y-3 flex justify-center">
               {/* View Game Items */}
               <Button
                 onClick={() => {
@@ -351,7 +345,7 @@ export default function ConnectionsResults({
                     onNavigate("game-items");
                   }
                 }}
-                className="w-full"
+                className="w-64"
                 variant="primary"
               >
                 Continue

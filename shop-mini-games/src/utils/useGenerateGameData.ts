@@ -1,4 +1,4 @@
-import { useGenerateQuestionWithMultipleSearches, Difficulty } from './generateQuestions'
+import { useGenerateQuestion, Difficulty } from './generateQuestions'
 import { useMemo } from 'react'
 
 export interface GameCategory {
@@ -26,11 +26,11 @@ function filterUniqueItems(
   })
 }
 
-export function useGenerateGameData(): UseGenerateGameDataResult {
-  const easy = useGenerateQuestionWithMultipleSearches('easy')
-  const medium = useGenerateQuestionWithMultipleSearches('medium')
-  const hard = useGenerateQuestionWithMultipleSearches('hard')
-  const expert = useGenerateQuestionWithMultipleSearches('expert')
+export function useGenerateGameData(seed?: number): UseGenerateGameDataResult {
+  const easy = useGenerateQuestion('easy', seed)
+  const medium = useGenerateQuestion('medium', seed)
+  const hard = useGenerateQuestion('hard', seed)
+  const expert = useGenerateQuestion('expert', seed)
 
   const loading = easy.loading || medium.loading || hard.loading || expert.loading
   const error = easy.error || medium.error || hard.error || expert.error || null
@@ -49,10 +49,10 @@ export function useGenerateGameData(): UseGenerateGameDataResult {
     ]
     
     for (const { difficulty, data } of categoryData) {
-      if (data.items && data.items.length > 0) {
+      if (data.items && data.items.length >= 4) {
         const uniqueItems = filterUniqueItems(data.items, usedIds)
         
-        if (uniqueItems.length >= 3) {
+        if (uniqueItems.length >= 4) {
           processedCategories.push({
             difficulty,
             category: data.category,
