@@ -1,6 +1,6 @@
 # Shopify Shop Mini Hackathon
 
-Created a mini game for Shop Mini!
+Mini Links now on the Shop App!
 
 Connections but with products in the Shopify SDK
 
